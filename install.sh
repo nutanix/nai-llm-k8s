@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kf_version=1.7.0
+KF_VERSION=1.7.0
 
 helpFunction()
 {
@@ -25,8 +25,8 @@ then
 fi
 
 # Download kubeflow manifests
-wget https://github.com/kubeflow/manifests/archive/refs/tags/v"$kf_version".zip
-unzip v"$kf_version".zip; mv manifests-"$kf_version" manifests
+wget https://github.com/kubeflow/manifests/archive/refs/tags/v"$KF_VERSION".zip
+unzip v"$KF_VERSION".zip; mv manifests-"$KF_VERSION" manifests
 
 # Install kubeflow
 while ! kustomize build install-kubeflow  | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 15; done
@@ -36,5 +36,5 @@ kubectl patch cm config-domain -p "{\"data\": {\"$company_domain\": \"\"}}" -n k
 kubectl patch service istio-ingressgateway -p '{"spec": {"type": "LoadBalancer"}}' -n istio-system
 
 # Remove kubeflow manifests
-rm v"$kf_version".zip
+rm v"$KF_VERSION".zip
 rm -rf manifests
