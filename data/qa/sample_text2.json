@@ -1,0 +1,11 @@
+{
+    "id": "42",
+    "inputs": [
+        {
+            "name": "input0",
+            "shape": [-1],
+            "datatype": "BYTES",
+            "data": ["List all Canadian provinces in alphabetical order."]
+        }
+    ]
+  }

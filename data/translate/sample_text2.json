@@ -1,0 +1,11 @@
+{
+  "id": "42",
+  "inputs": [
+      {
+          "name": "input0",
+          "shape": [-1],
+          "datatype": "BYTES",
+          "data": ["Translate the sentence 'I have no mouth but I must scream' into Spanish.\nAnswer:"]
+      }
+  ]
+}
