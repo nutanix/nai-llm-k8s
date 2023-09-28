@@ -1,0 +1,11 @@
+{
+  "id": "42",
+  "inputs": [
+      {
+          "name": "input0",
+          "shape": [-1],
+          "datatype": "BYTES",
+          "data": ["Take a deep breathe and provide summary of the following conversation into five bullet points. \nConversation: \n#Person1#: Could you do me a favor? \n#Person2#: Sure. What is it? \n#Person1#: Could you run over to the store? We need a few things. \n#Person2#: All right. What do you want me to get? \n#Person1#: Well could you pick up some sugar? \n#Person2#: Okay. How much? \n#Person1#: A small bag. I guess we also need a few oranges. \n#Person2#: How many? \n#Person1#: Oh lets see. . . About six. \n#Person2#: Anything else? \n#Person1#: Yes. We're out of milk. \n#Person2#: Okay. How much do you want me to get? A gallon? \n#Person1#: No. I think a half gallon will be enough. \n#Person2#: Is that all? #Person1#: I think so. Have you got all that? \n#Person2#: Yes. That's small bag of sugar four oranges and a half gallon of milk. \n#Person1#: Do you have enough money? \n#Person2#: I think so. \n#Person1#: Thanks very much. I appreciate it.\nSummary:"]
+      }
+  ]
+}

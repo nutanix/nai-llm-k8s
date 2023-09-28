@@ -1,0 +1,11 @@
+{
+  "id": "42",
+  "inputs": [
+      {
+          "name": "input0",
+          "shape": [-1],
+          "datatype": "BYTES",
+          "data": ["Question: Select the fish below.\nContext: Fish live underwater. They have fins, not limbs. Fish are cold-blooded. The body temperature of coldblooded animals depends on their environment. A Banggai cardinalfish is an example of a fish.\nChoices: (A) green moray eel (B) rabbit (C) woodpecker (D) bald eagle"]
+      }
+  ]
+}
