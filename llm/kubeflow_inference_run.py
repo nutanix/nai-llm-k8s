@@ -81,7 +81,7 @@ def create_pvc(core_api, deploy_name, storage):
     core_api.create_namespaced_persistent_volume_claim(body=persistent_volume_claim, namespace='default')
 
 
-def create_isvc(deploy_name, model_name, cpus, memory, gpus):
+def create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params):
     storageuri = 'pvc://'+ deploy_name + '/' + model_name
 
     default_model_spec = V1beta1InferenceServiceSpec(
@@ -109,6 +109,22 @@ def create_isvc(deploy_name, model_name, cpus, memory, gpus):
                     client.V1EnvVar(
                         name='TS_NUMBER_OF_GPU',
                         value=str(gpus)
+                    ),
+                    client.V1EnvVar(
+                        name='NAI_TEMPERATURE',
+                        value=str(model_params["temperature"])
+                    ),
+                    client.V1EnvVar(
+                        name='NAI_REP_PENALTY',
+                        value=str(model_params["repetition_penalty"])
+                    ),
+                    client.V1EnvVar(
+                        name='NAI_TOP_P',
+                        value=str(model_params["top_p"])
+                    ),
+                    client.V1EnvVar(
+                        name='NAI_MAX_TOKENS',
+                        value=str(model_params["max_new_tokens"])
                     )
                 ],
                 resources=client.V1ResourceRequirements(
@@ -173,6 +189,7 @@ def execute(args):
     storage = '100Gi'
 
     set_config(model_name, args.mount_path)
+    model_params = ts.get_model_params(model_name)
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
@@ -181,7 +198,7 @@ def execute(args):
 
     create_pvc(core_api, deploy_name, storage)
 
-    create_isvc(deploy_name, model_name, cpus, memory, gpus)
+    create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params)
 
     print("wait for model registration to complete, will take some time")
     time.sleep(240)

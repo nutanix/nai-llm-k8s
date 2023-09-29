@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import subprocess
-from system_utils import check_if_path_exists
+from utils.system_utils import check_if_path_exists
 
 def generate_mars(dl_model, mar_config, model_store_dir, debug=False):
     debug and print(f"## Starting generate_mars, mar_config:{mar_config}, model_store_dir:{model_store_dir}\n")

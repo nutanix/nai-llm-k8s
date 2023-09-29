@@ -2,8 +2,8 @@
 SCRIPT=$(realpath "$0")
 wdir=$(dirname "$SCRIPT")
 
-CPU_pod = "8"
-MEM_pod = "32Gi"
+CPU_pod="8"
+MEM_pod="32Gi"
 
 function helpFunction()
 {
