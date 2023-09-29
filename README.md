@@ -4,17 +4,26 @@
 
 ### Prerequisite
 * [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
-* [kustomize](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.1)
+* [helm](https://helm.sh/docs/intro/install/)
 
-### Kubeflow installation
-Pass your company domain e.g. (ntnx.com) to `install.sh` script
+Download and set up KubeConfig by following the steps outlined in “Downloading the Kubeconfig” on the Nutanix Support Portal.
+
+Configure Nvidia Driver in the cluster using helm commands:
+
 ```
-bash install.sh -d=<company-domain>
+helm repo add nvidia https://nvidia.github.io/gpu-operator && helm repo update
+helm install --wait -n gpu-operator --create-namespace gpu-operator nvidia/gpu-operator --set toolkit.version=v1.13.0-centos7
+```
+
+### Kubeflow serving installation
+
+```
+curl -s "https://raw.githubusercontent.com/kserve/kserve/v0.11.0/hack/quick_install.sh" | bash
 ```
 
 ### Setup
 
-Install openjdk, pip3:
+Install pip3:
 ```
 sudo apt-get install python3-pip
 ```
@@ -25,27 +34,12 @@ Install required packages:
 pip install -r requirements.txt
 ```
 
-Install NVIDIA Drivers:
-
-Reference: https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html#runfile
-Download the latest Datacenter Nvidia drivers for the GPU type from  https://www.nvidia.com/download/index.aspx
-
-For Nvidia A100, Select A100 in Datacenter Tesla for Linux 64 bit with cuda toolkit 11.7, latest driver is 515.105.01
-
-```
-curl -fSsl -O https://us.download.nvidia.com/tesla/515.105.01/NVIDIA-Linux-x86_64-515.105.01.run
-sudo sh NVIDIA-Linux-x86_64-515.105.01.run -s
-```
-
-Note: We don’t need to install CUDA toolkit separately as it is bundled with PyTorch installation. Just Nvidia driver installation is enough. 
-
-
 ### Scripts
 
 #### Download model files and Generate MAR file
 Run the following command for downloading model files and/or generating MAR file: 
 ```
-python3 download_script.py [--no_download] [--no_generate] --model_name <MODEL_NAME> --model_path <MODEL_PATH> --mar_output <MAR_EXPORT_PATH>  --hf_token <Your_HuggingFace_Hub_Token>
+python3 download_script.py [--no_download] [--no_generate] --model_name <MODEL_NAME> --model_path <MODEL_PATH> --mar_output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
 ```
 - no_download:      Set flag to skip downloading the model files
 - no_generate:      Set flag to skip generating MAR file

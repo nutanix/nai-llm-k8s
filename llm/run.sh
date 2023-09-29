@@ -2,8 +2,8 @@
 SCRIPT=$(realpath "$0")
 wdir=$(dirname "$SCRIPT")
 
-CPU_pod = "8"
-MEM_pod = "32Gi"
+CPU_pod="8"
+MEM_pod="32Gi"
 
 function helpFunction()
 {
@@ -59,7 +59,7 @@ function inference_exec_kubernetes()
     python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_pod --mem $MEM_pod --model_name $model_name --mount_path $mount_path --nfs $nfs --deploy_name $deploy_name --data $data
 
     if [ -z $stop_server ] ; then
-        python3 $wdir/utils/cleanup.py --k8s --deploy_name $deploy_name
+        python3 $wdir/utils/cleanup.py --deploy_name $deploy_name
     fi
 }
 
