@@ -7,7 +7,17 @@
 * [kustomize](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.1)
 * [helm](https://helm.sh/docs/intro/install/)
 
+Download and set up KubeConfig by following the steps outlined in “Downloading the Kubeconfig” on the Nutanix Support Portal.
+
+Configure Nvidia Driver in the cluster using helm commands:
+
+```
+helm repo add nvidia https://nvidia.github.io/gpu-operator && helm repo update
+helm install --wait -n gpu-operator --create-namespace gpu-operator nvidia/gpu-operator --set toolkit.version=v1.13.0-centos7
+```
+
 ### Kubeflow installation
+
 Pass your company domain e.g. (ntnx.com) to `install.sh` script
 ```
 bash install.sh -d=<company-domain>
@@ -24,15 +34,6 @@ Install required packages:
 
 ```
 pip install -r requirements.txt
-```
-
-Download and set up KubeConfig by following the steps outlined in “Downloading the Kubeconfig” on the Nutanix Support Portal.
-
-Configure Nvidia Driver in the cluster using helm commands:
-
-```
-helm repo add nvidia https://nvidia.github.io/gpu-operator && helm repo update
-helm install --wait -n gpu-operator --create-namespace gpu-operator nvidia/gpu-operator --set toolkit.version=v1.13.0-centos7
 ```
 
 ### Scripts
