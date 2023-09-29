@@ -61,20 +61,5 @@
             "response_timeout" : 2000
         },
         "gpu_type": ["A100-PCIE-40GB","A100-PCIE-80GB"]
-    },
-    "phi": {
-        "model_name": "phi",
-        "version": "1.0",
-        "serialized_file_local": "pytorch_model.bin",
-        "handler": "handler.py",
-        "extra_files":"config.json,generation_config.json,added_tokens.json,special_tokens_map.json,tokenizer_config.json,tokenizer.json,vocab.json,modeling_mixformer_sequential.py,configuration_mixformer_sequential.py,requirements.txt",
-        "repo_id": "microsoft/phi-1_5",
-        "requirements_file": "model_requirements.txt",
-        "registration_params":{
-            "batch_size" : 16,
-            "max_batch_delay" : 2000,
-            "response_timeout" : 2000
-        },
-        "gpu_type": ["A100-PCIE-40GB","A100-PCIE-80GB"]
     }
 }
