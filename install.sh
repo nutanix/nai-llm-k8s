@@ -34,13 +34,6 @@ wget https://github.com/kubeflow/manifests/archive/refs/tags/v"$KF_VERSION".tar.
 mkdir $WORK_DIR/manifests
 tar -xvf $WORK_DIR/v"$KF_VERSION".tar.gz -C $WORK_DIR/manifests --strip-components=1
 
-# patch kserve version
-kserve_path=$WORK_DIR/manifests/contrib/kserve/kserve/
-kserve_release_path=https://github.com/kserve/kserve/releases/download/v0.11.1
-rm $kserve_path/kserve.yaml; wget $kserve_release_path/kserve.yaml -P $kserve_path
-rm $kserve_path/kserve-runtimes.yaml; wget $kserve_release_path/kserve-runtimes.yaml -P $kserve_path
-rm $kserve_path/kserve_kubeflow.yaml; wget $kserve_release_path/kserve_kubeflow.yaml -P $kserve_path
-
 # Install kubeflow
 while ! kustomize build $WORK_DIR/install  | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
 

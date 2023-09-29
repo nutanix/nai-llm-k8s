@@ -54,8 +54,5 @@ resources:
 # Kubeflow Istio Resources
 - ../manifests/common/istio-1-17/kubeflow-istio-resources/base
 
-# Admission Webhook
-- ../manifests/apps/admission-webhook/upstream/overlays/cert-manager
-
 # KServe
 - ../manifests/contrib/kserve/kserve
