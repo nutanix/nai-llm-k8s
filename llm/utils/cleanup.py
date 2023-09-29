@@ -12,18 +12,20 @@ def kubernetes(deploy_name):
     try:
         kserve.delete(name=deploy_name, namespace='default')
     except:
-        return
+        print("Deployment pod delete triggered")
 
     core_api = client.CoreV1Api()
     try:
-        core_api.delete_persistent_volume(name=deploy_name)
-    except:
-        return
-    
-    try:
         core_api.delete_namespaced_persistent_volume_claim(name=deploy_name, namespace='default')
     except:
-        return
+        print("PVC delete triggered")
+
+    try:
+        core_api.delete_persistent_volume(name=deploy_name)
+    except:
+        print("PV delete triggered")
+    
+    
 
 
 if __name__ == '__main__':
