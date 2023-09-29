@@ -37,13 +37,13 @@ resources:
 - ../manifests/common/cert-manager/kubeflow-issuer/base
 
 # Istio
-- ../manifests/common/istio-1-16/istio-crds/base
-- ../manifests/common/istio-1-16/istio-namespace/base
-- ../manifests/common/istio-1-16/istio-install/base
+- ../manifests/common/istio-1-17/istio-crds/base
+- ../manifests/common/istio-1-17/istio-namespace/base
+- ../manifests/common/istio-1-17/istio-install/base
 
 # KNative
 - ../manifests/common/knative/knative-serving/overlays/gateways
-- ../manifests/common/istio-1-16/cluster-local-gateway/base
+- ../manifests/common/istio-1-17/cluster-local-gateway/base
 
 # Kubeflow namespace
 - ../manifests/common/kubeflow-namespace/base
@@ -52,7 +52,10 @@ resources:
 - ../manifests/common/kubeflow-roles/base
 
 # Kubeflow Istio Resources
-- ../manifests/common/istio-1-16/kubeflow-istio-resources/base
+- ../manifests/common/istio-1-17/kubeflow-istio-resources/base
+
+# Admission Webhook
+- ../manifests/apps/admission-webhook/upstream/overlays/cert-manager
 
 # KServe
 - ../manifests/contrib/kserve/kserve
