@@ -4,7 +4,7 @@ import json
 import sys
 from huggingface_hub import snapshot_download
 import utils.marsgen as mg
-from utils.system_utils import check_if_path_exists, create_folder_if_not_exits, check_if_folder_empty
+from utils.system_utils import check_if_path_exists, create_folder_if_not_exits, delete_all_files_in_directory
 
 MODEL_STORE = 'model-store'
 MODEL_FILES = 'download'
@@ -34,10 +34,6 @@ def set_values(args):
 
 def run_download(dl_model):
     check_if_path_exists(dl_model.model_path, "model_path")
-    if not check_if_folder_empty(dl_model.model_path):
-       print(f"## Make sure that the path provided to download model files is empty")
-       sys.exit(1)
-    
     mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
     check_if_path_exists(mar_config_path)
 
@@ -87,9 +83,10 @@ def run_script(args):
     dl_model = set_values(args)
     check_if_path_exists(dl_model.output, "output")
     path = os.path.join(dl_model.output, dl_model.model_name, MODEL_FILES)
-    create_folder_if_not_exits(path)
     dl_model.model_path = path
     if dl_model.download_model:
+        delete_all_files_in_directory(dl_model.model_path)
+        create_folder_if_not_exits(dl_model.model_path)
         dl_model = run_download(dl_model)
     
     path = os.path.join(dl_model.output, dl_model.model_name, MODEL_STORE)
