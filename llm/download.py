@@ -4,10 +4,14 @@ import json
 import sys
 from huggingface_hub import snapshot_download
 import utils.marsgen as mg
-from utils.system_utils import check_if_path_exists, create_folder_if_not_exits, delete_all_files_in_directory
+from utils.system_utils import check_if_path_exists, create_folder_if_not_exits, delete_directory
 
 MODEL_STORE = 'model-store'
-MODEL_FILES = 'download'
+MODEL_FILES_LOCATION = 'download'
+
+
+def get_ignore_pattern_list(extension_list):
+    return ["*"+pattern for pattern in extension_list]
 
 class DownloadDataModel(object):
     model_name = str()
@@ -56,7 +60,7 @@ def run_download(dl_model):
                       local_dir=dl_model.model_path,
                       local_dir_use_symlinks=False,
                       token=dl_model.hf_token,
-                      ignore_patterns=["*.safetensors", "*.safetensors.index.json"])
+                      ignore_patterns=get_ignore_pattern_list(mg.FILE_EXTENSIONS_TO_IGNORE))
     print("## Successfully downloaded model_files\n")
     return dl_model
 
@@ -82,10 +86,10 @@ def create_mar(dl_model):
 def run_script(args):
     dl_model = set_values(args)
     check_if_path_exists(dl_model.output, "output")
-    path = os.path.join(dl_model.output, dl_model.model_name, MODEL_FILES)
+    path = os.path.join(dl_model.output, dl_model.model_name, MODEL_FILES_LOCATION)
     dl_model.model_path = path
     if dl_model.download_model:
-        delete_all_files_in_directory(dl_model.model_path)
+        delete_directory(dl_model.model_path)
         create_folder_if_not_exits(dl_model.model_path)
         dl_model = run_download(dl_model)
     

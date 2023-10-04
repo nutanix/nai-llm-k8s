@@ -11,7 +11,7 @@ def create_folder_if_not_exits(path):
     os.makedirs(path, exist_ok=True)
     print(f"The new directory is created! - {path}")
 
-def delete_all_files_in_directory(directory_path):
+def delete_directory(directory_path):
     if not os.path.exists(directory_path):
         return
     try:
