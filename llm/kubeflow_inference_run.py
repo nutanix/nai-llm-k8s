@@ -89,19 +89,7 @@ def create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params):
             pytorch=V1beta1TorchServeSpec(
                 protocol_version='v2',
                 storage_uri=storageuri,
-                env=[
-                    client.V1EnvVar(
-                        name='TS_INFERENCE_ADDRESS',
-                        value='http://0.0.0.0:8085'
-                    ),
-                    client.V1EnvVar(
-                        name='TS_MANAGEMENT_ADDRESS',
-                        value='http://0.0.0.0:8090'
-                    ),
-                    client.V1EnvVar(
-                        name='TS_METRICS_ADDRESS',
-                        value='http://0.0.0.0:8091'
-                    ),
+                 env=[
                     client.V1EnvVar(
                         name='TS_SERVICE_ENVELOPE',
                         value='body'
@@ -126,7 +114,7 @@ def create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params):
                         name='NAI_MAX_TOKENS',
                         value=str(model_params["max_new_tokens"])
                     )
-                ],
+                 ],
                 resources=client.V1ResourceRequirements(
                     limits={
                         "cpu": cpus,
