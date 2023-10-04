@@ -34,13 +34,19 @@ wget https://github.com/kubeflow/manifests/archive/refs/tags/v"$KF_VERSION".tar.
 mkdir $WORK_DIR/manifests
 tar -xvf $WORK_DIR/v"$KF_VERSION".tar.gz -C $WORK_DIR/manifests --strip-components=1
 
+# Remove downloaded tar file
+rm $WORK_DIR/v"$KF_VERSION".tar.gz
+
+cp $WORK_DIR/install/kustomization-pipeline.yaml $WORK_DIR/manifests/apps/pipeline/upstream/env/cert-manager/platform-agnostic-multi-user/kustomization.yaml
+mkdir -p $WORK_DIR/manifests/apps/pipeline/upstream/env/ntnx
+cp -r $WORK_DIR/install/ntnx $WORK_DIR/manifests/apps/pipeline/upstream/env
+
 # Install kubeflow
-while ! kustomize build $WORK_DIR/install  | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+while ! kustomize build $WORK_DIR/manifests/example  | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
 
 # Apply patches
 kubectl patch cm config-domain -p "{\"data\": {\"$company_domain\": \"\"}}" -n knative-serving
 kubectl patch service istio-ingressgateway -p '{"spec": {"type": "LoadBalancer"}}' -n istio-system
 
 # Remove kubeflow manifests
-rm $WORK_DIR/v"$KF_VERSION".tar.gz
 rm -rf $WORK_DIR/manifests

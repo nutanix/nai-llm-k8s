@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-pipeline
+spec:
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline
+    spec:
+      containers:
+        - env:
+            - name: OBJECTSTORECONFIG_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: pipeline-install-config
+                  key: minioServiceHost
+          name: ml-pipeline-api-server
