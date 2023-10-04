@@ -5,6 +5,7 @@
 ### Prerequisite
 * [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
 * [helm](https://helm.sh/docs/intro/install/)
+* [kustomize](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.3)
 
 Download and set up KubeConfig by following the steps outlined in “Downloading the Kubeconfig” on the Nutanix Support Portal.
 
@@ -15,10 +16,12 @@ helm repo add nvidia https://nvidia.github.io/gpu-operator && helm repo update
 helm install --wait -n gpu-operator --create-namespace gpu-operator nvidia/gpu-operator --set toolkit.version=v1.13.0-centos7
 ```
 
-### Kubeflow serving installation
-
+### Kubeflow Installation
+* Kubeflow installation requires nutanix object store for storing pipelines and artifacts.
+* To install kubeflow with nutanix object store, put object store secrets in `install/ntnx/minio-artifact-secret.env` file and object store host in `install/ntnx/pipeline-install-config.env` file.
+* Run the following command with company domain e.g. `ntnx.com`
 ```
-curl -s "https://raw.githubusercontent.com/kserve/kserve/v0.11.0/hack/quick_install.sh" | bash
+bash $WORK_DIR/install.sh -d <company-domain>
 ```
 
 ### Setup
