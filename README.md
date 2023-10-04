@@ -21,7 +21,7 @@ helm install --wait -n gpu-operator --create-namespace gpu-operator nvidia/gpu-o
 * To install kubeflow with nutanix object store, put object store secrets in `install/ntnx/minio-artifact-secret.env` file and object store host in `install/ntnx/pipeline-install-config.env` file.
 * Run the following command with company domain e.g. `ntnx.com`
 ```
-bash $WORK_DIR/install.sh -d <company-domain>
+bash install.sh -d <company-domain>
 ```
 
 ### Setup
