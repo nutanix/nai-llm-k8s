@@ -106,7 +106,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_download', action='store_false',
                         help='flag to not download')
     parser.add_argument('--output', type=str, default="",
-                        metavar='mx', help='absolute path of the local nfs mount')
+                        metavar='mx', help='absolute path of the output location in local nfs mount')
     parser.add_argument('--handler_path', type=str, default="",
                         metavar='hp', help='absolute path of handler')
     parser.add_argument('--hf_token', type=str, default=None,
