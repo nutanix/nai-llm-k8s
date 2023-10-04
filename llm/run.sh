@@ -7,11 +7,11 @@ MEM_pod="32Gi"
 
 function helpFunction()
 {
-    echo "Usage: $0 -n <MODEL_NAME> -d <INPUT_DATA_ABSOLUTE_PATH>  -g <NUM_OF_GPUS> -m <NFS_LOCAL_MOUNT_LOCATION> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -k]"
+    echo "Usage: $0 -n <MODEL_NAME> -d <INPUT_DATA_ABSOLUTE_PATH>  -g <NUM_OF_GPUS> -m <NFS_LOCAL_MOUNT_LOCATION> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> -s <KUBE_DEPLOYMENT_NAMEPSACE> [OPTIONAL -k]"
     echo -e "\t-m Absolute path to the NFS local mount location"
     echo -e "\t-f NFS server address with share path information"
     echo -e "\t-e Name of the deployment metadata"
-    echo -e "\t-o Choice of compute infra to be run on"
+    echo -e "\t-s Namespace for the deployment"
     echo -e "\t-n Name of the Model"
     echo -e "\t-d Absolute path to the inputs folder that contains data to be predicted."
     echo -e "\t-g Number of gpus to be used to execute. Set 0 to use cpu"
@@ -49,6 +49,10 @@ function inference_exec_kubernetes()
         helpFunction
     fi
 
+    if [ -z $namespace ] ; then
+        namespace="kubeflow-user-example-com"
+    fi
+
     mkdir $mount_path/$model_name/config
     cp $wdir/config.properties $mount_path/$model_name/config/
 
@@ -56,7 +60,7 @@ function inference_exec_kubernetes()
     export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
 
     echo "Running the Inference script";
-    python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_pod --mem $MEM_pod --model_name $model_name --mount_path $mount_path --nfs $nfs --deploy_name $deploy_name --data $data
+    python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_pod --mem $MEM_pod --model_name $model_name --mount_path $mount_path --nfs $nfs --deploy_name $deploy_name --namespace $namespace --data $data
 
     if [ -z $stop_server ] ; then
         python3 $wdir/utils/cleanup.py --deploy_name $deploy_name
@@ -64,7 +68,7 @@ function inference_exec_kubernetes()
 }
 
 # Entry Point
-while getopts ":n:d:g:m:f:e:k" opt;
+while getopts ":n:d:g:m:f:e:s:k" opt;
 do
    case "$opt" in
         n ) model_name="$OPTARG" ;;
@@ -73,6 +77,7 @@ do
         m ) mount_path="$OPTARG" ;;
         f ) nfs="$OPTARG" ;;
         e ) deploy_name="$OPTARG" ;;
+        s ) namespace="$OPTARG" ;;
         k ) stop_server=0 ;;
         ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
    esac

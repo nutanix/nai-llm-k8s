@@ -54,7 +54,7 @@ def create_pv(core_api, deploy_name, storage, nfs_server, nfs_path):
     core_api.create_persistent_volume(body=persistent_volume)
 
 
-def create_pvc(core_api, deploy_name, storage):
+def create_pvc(core_api, deploy_name, namespace, storage):
     # Create Persistent Volume Claim
     persistent_volume_claim = client.V1PersistentVolumeClaim(
         api_version='v1',
@@ -78,10 +78,10 @@ def create_pvc(core_api, deploy_name, storage):
         )
     )
 
-    core_api.create_namespaced_persistent_volume_claim(body=persistent_volume_claim, namespace='default')
+    core_api.create_namespaced_persistent_volume_claim(body=persistent_volume_claim, namespace=namespace)
 
 
-def create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params):
+def create_isvc(deploy_name, namespace, model_name, cpus, memory, gpus, model_params):
     storageuri = 'pvc://'+ deploy_name + '/' + model_name
 
     default_model_spec = V1beta1InferenceServiceSpec(
@@ -131,22 +131,27 @@ def create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params):
         )
     )
 
-    isvc = V1beta1InferenceService(api_version=constants.KSERVE_V1BETA1,
+    isvc = V1beta1InferenceService(
+        api_version=constants.KSERVE_V1BETA1,
         kind=constants.KSERVE_KIND,
-        metadata=client.V1ObjectMeta(name=deploy_name, namespace='default'),
+        metadata=client.V1ObjectMeta(
+            name=deploy_name, 
+            namespace=namespace, 
+            annotations={"sidecar.istio.io/inject": "false"}
+        ),
         spec=default_model_spec)
 
 
     kserve = KServeClient(client_configuration=config.load_kube_config())
     kserve.create(isvc, watch=True)
 
-def execute_inference_on_inputs(model_inputs, model_name, deploy_name):
+def execute_inference_on_inputs(model_inputs, model_name, deploy_name, namespace):
     for input in model_inputs:    
         host = os.environ.get('INGRESS_HOST')
         port = os.environ.get('INGRESS_PORT')
 
         kserve = KServeClient(client_configuration=config.load_kube_config())
-        obj=kserve.get(name=deploy_name, namespace='default')
+        obj=kserve.get(name=deploy_name, namespace=namespace)
         service_hostname = obj['status']['url'].split('/')[2:][0]
         headers = {"Content-Type": "application/json; charset=utf-8", "Host": service_hostname}
 
@@ -169,6 +174,7 @@ def execute(args):
     deploy_name = args.deploy_name
     model_name = args.model_name
     input_path = args.data
+    namespace = args.namespace
 
     if not nfs_path or not nfs_server:
         print("NFS server and share path was not provided in accepted format - <address>:<share_path>")
@@ -181,12 +187,18 @@ def execute(args):
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
+    
+    # create namespace
+    namespace_config = client.V1Namespace(
+        metadata=client.V1ObjectMeta(name=namespace))
+
+    core_api.create_namespace(namespace_config)
 
     create_pv(core_api, deploy_name, storage, nfs_server, nfs_path)
 
-    create_pvc(core_api, deploy_name, storage)
+    create_pvc(core_api, deploy_name, namespace, storage)
 
-    create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params)
+    create_isvc(deploy_name, namespace, model_name, cpus, memory, gpus, model_params)
 
     print("wait for model registration to complete, will take some time")
     time.sleep(240)
@@ -194,7 +206,7 @@ def execute(args):
     if input_path:
         check_if_path_exists(input_path, 'Input')
         model_inputs = get_inputs_from_folder(input_path)
-        execute_inference_on_inputs(model_inputs, model_name, deploy_name)
+        execute_inference_on_inputs(model_inputs, model_name, deploy_name, namespace)
 
 
 if __name__ == '__main__':
@@ -209,6 +221,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_name', type=str, help='name of the model to deploy')
     parser.add_argument('--mount_path', type=str, help='local path to the nfs mount location')
     parser.add_argument('--deploy_name', type=str, help='name of the deployment')
+    parser.add_argument('--namespace', type=str, help='namespace for the deployment')
     parser.add_argument('--data', type=str, help='data folder for the deployment validation')
 
     # Parse the command-line arguments

@@ -5,7 +5,7 @@ from kubernetes import client, config
 from kserve import KServeClient
 
 
-def kubernetes(deploy_name):
+def kubernetes(deploy_name, namespace):
     print("Clean up triggered for all the deployments under -", deploy_name)
     kube_config = config.load_kube_config()
     kserve = KServeClient(client_configuration=kube_config)
@@ -25,6 +25,11 @@ def kubernetes(deploy_name):
     except:
         print("PV delete triggered")
     
+    try:
+        core_api.delete_namespace(name=namespace)
+    except:
+        print("Namespace delete triggered")
+    
     
 
 
@@ -34,6 +39,7 @@ if __name__ == '__main__':
 
     # Add arguments
     parser.add_argument('--deploy_name', type=str, help='name of the deployment')
+    parser.add_argument('--namespace', type=str, help='namespace provided for the deployment', default="kubeflow-user-example-com", required=False)
 
     # Parse the command-line arguments
     args = parser.parse_args()
@@ -42,4 +48,4 @@ if __name__ == '__main__':
         print("Deployment name not provided")
         sys.exit(1)
 
-    kubernetes(args.deploy_name)
+    kubernetes(args.deploy_name, args.namespace)
