@@ -9,6 +9,7 @@
 Download and set up KubeConfig by following the steps outlined in “Downloading the Kubeconfig” on the Nutanix Support Portal.
 
 Configure Nvidia Driver in the cluster using helm commands:
+
 ```
 helm repo add nvidia https://nvidia.github.io/gpu-operator && helm repo update
 helm install --wait -n gpu-operator --create-namespace gpu-operator nvidia/gpu-operator --set toolkit.version=v1.13.0-centos7
