@@ -4,6 +4,7 @@ wdir=$(dirname "$SCRIPT")
 
 CPU_pod="8"
 MEM_pod="32Gi"
+DEFAULT_NAMESPACE="kubeflow-user-example-com"
 
 function helpFunction()
 {
@@ -50,7 +51,7 @@ function inference_exec_kubernetes()
     fi
 
     if [ -z $namespace ] ; then
-        namespace="kubeflow-user-example-com"
+        namespace=$DEFAULT_NAMESPACE
     fi
 
     mkdir $mount_path/$model_name/config

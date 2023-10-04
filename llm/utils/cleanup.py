@@ -4,6 +4,7 @@ import sys
 from kubernetes import client, config
 from kserve import KServeClient
 
+DEFAULT_NAMESPACE="kubeflow-user-example-com"
 
 def kubernetes(deploy_name, namespace):
     print("Clean up triggered for all the deployments under -", deploy_name)
@@ -39,7 +40,7 @@ if __name__ == '__main__':
 
     # Add arguments
     parser.add_argument('--deploy_name', type=str, help='name of the deployment')
-    parser.add_argument('--namespace', type=str, help='namespace provided for the deployment', default="kubeflow-user-example-com", required=False)
+    parser.add_argument('--namespace', type=str, help='namespace provided for the deployment', default=DEFAULT_NAMESPACE, required=False)
 
     # Parse the command-line arguments
     args = parser.parse_args()
