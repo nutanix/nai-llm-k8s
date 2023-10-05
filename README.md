@@ -101,7 +101,7 @@ bash $WORK_DIR/llm/run.sh -n mpt_7b -d data/translate -m /mnt/llm -g 1 -e llm-de
 ```
 For 1 GPU Inference with official Falcon-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/lm/run.sh -n falcon_7b -d data/qa -m /mnt/llm -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -m /mnt/llm -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
 ```
 For 1 GPU Inference with official Llama2-7B model and keep inference server alive:
 ```
