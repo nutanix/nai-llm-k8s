@@ -39,11 +39,11 @@ pip install -r requirements.txt
 #### Download model files and Generate MAR file
 Run the following command for downloading model files and/or generating MAR file: 
 ```
-python3 download_script.py [--no_download] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
+python3 download.py [--no_download] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
 ```
 - no_download:      Set flag to skip downloading the model files
 - model_name:       Name of model
-- output:       Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
+- output:           Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
 - hf_token:         Your HuggingFace token. Needed to download LLAMA(2) models.
 
 The available LLMs are mpt_7b, falcon_7b, llama2_7b
