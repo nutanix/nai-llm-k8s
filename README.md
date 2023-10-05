@@ -49,7 +49,7 @@ pip install -r $WORK_DIR/llm/requirements.txt
 ### Scripts
 
 #### Download model files and Generate MAR file
-Run the following command for downloading model files and/or generating MAR file: 
+Run the following command for downloading model files and generating MAR file: 
 ```
 python3 download.py [--no_download] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
 ```
