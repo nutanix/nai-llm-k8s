@@ -63,9 +63,9 @@ Download Llama2-7B model files(26 GB) and generate model archive(9.66 GB) for it
 python3 llm/download.py --model_name llama2_7b --output /mnt/llm --hf_token <token_value>
 ```
 
-#### Start Kubeflow KServe and run inference
+#### Start and run Kubeflow Serving
 
-Run the following command for starting Kserve and running inference on the given input:
+Run the following command for starting Kubeflow serving and running inference on the given input:
 ```
 bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -m <NFS_LOCAL_MOUNT_LOCATION> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -k]
 ```
@@ -84,15 +84,15 @@ Should print "Inference Run Successful" as a message at the end
 
 ##### Examples
 
-For 1 GPU Inference with official MPT-7B model and keep Kserve alive:
+For 1 GPU Inference with official MPT-7B model and keep inference server alive:
 ```
 bash llm/run.sh -n mpt_7b -d data/translate -m /mnt/llm -g 1 -e mpt_deploy -f '1.1.1.1:/llm' -k
 ```
-For 1 GPU Inference with official Falcon-7B model and keep Kserve alive:
+For 1 GPU Inference with official Falcon-7B model and keep inference server alive:
 ```
 bash llm/run.sh -n falcon_7b -d data/qa -m /mnt/llm -g 1 -e falcon_deploy -f '1.1.1.1:/llm' -k
 ```
-For 1 GPU Inference with official Llama2-7B model and keep Kserve alive:
+For 1 GPU Inference with official Llama2-7B model and keep inference server alive:
 ```
 bash llm/run.sh -n llama2_7b -d data/summarize -m /mnt/llm -g 1 -e llama2_deploy -f '1.1.1.1:/llm' -k
 ```
@@ -127,7 +127,7 @@ For Llama2-7B model
 curl -v -H "Host: ${SERVICE_HOSTNAME}" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/llama2_7b/infer -d @./data/translate/sample_test1.json
 ```
 
-#### Stop Kserve inference deployment and Cleanup
+#### Cleanup Inference deployment
 
 If keep alive flag was set in the bash script, then you can run the following command to stop the server and clean up temporary files
 ```
