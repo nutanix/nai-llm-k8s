@@ -39,13 +39,11 @@ pip install -r requirements.txt
 #### Download model files and Generate MAR file
 Run the following command for downloading model files and/or generating MAR file: 
 ```
-python3 download_script.py [--no_download] [--no_generate] --model_name <MODEL_NAME> --model_path <MODEL_PATH> --mar_output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
+python3 download.py [--no_download] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
 ```
 - no_download:      Set flag to skip downloading the model files
-- no_generate:      Set flag to skip generating MAR file
 - model_name:       Name of model
-- model_path:       Absolute path of model files
-- mar_output:       Mount path to your nfs server to be used in the kube PV
+- output:           Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
 - hf_token:         Your HuggingFace token. Needed to download LLAMA(2) models.
 
 The available LLMs are mpt_7b, falcon_7b, llama2_7b
@@ -54,20 +52,20 @@ The available LLMs are mpt_7b, falcon_7b, llama2_7b
 
 Download MPT-7B model files(13 GB) and generate model archive(9.83 GB) for it:
 ```
-python3 llm/download.py --model_name mpt_7b --model_path /home/ubuntu/models/mpt_7b/model_files --mar_output /mnt/llm
+python3 llm/download.py --model_name mpt_7b --output /mnt/llm
 ```
 Download Falcon-7B model files(14 GB) and generate model archive(10.69 GB) for it:
 ```
-python3 llm/download.py --model_name falcon_7b --model_path /home/ubuntu/models/falcon_7b/model_files --mar_output /mnt/llm
+python3 llm/download.py --model_name falcon_7b --output /mnt/llm
 ```
 Download Llama2-7B model files(26 GB) and generate model archive(9.66 GB) for it:
 ```
-python3 llm/download.py --model_name llama2_7b --model_path /home/ubuntu/models/llama2_7b/model_files --mar_output /mnt/llm --hf_token <token_value>
+python3 llm/download.py --model_name llama2_7b --output /mnt/llm --hf_token <token_value>
 ```
 
-#### Start Torchserve and run inference
+#### Start and run Kubeflow Serving
 
-Run the following command for starting Torchserve and running inference on the given input:
+Run the following command for starting Kubeflow serving and running inference on the given input:
 ```
 bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -m <NFS_LOCAL_MOUNT_LOCATION> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -k]
 ```
@@ -86,15 +84,15 @@ Should print "Inference Run Successful" as a message at the end
 
 ##### Examples
 
-For 1 GPU Inference with official MPT-7B model and keep torchserve alive:
+For 1 GPU Inference with official MPT-7B model and keep inference server alive:
 ```
 bash llm/run.sh -n mpt_7b -d data/translate -m /mnt/llm -g 1 -e mpt_deploy -f '1.1.1.1:/llm' -k
 ```
-For 1 GPU Inference with official Falcon-7B model and keep torchserve alive:
+For 1 GPU Inference with official Falcon-7B model and keep inference server alive:
 ```
 bash llm/run.sh -n falcon_7b -d data/qa -m /mnt/llm -g 1 -e falcon_deploy -f '1.1.1.1:/llm' -k
 ```
-For 1 GPU Inference with official Llama2-7B model and keep torchserve alive:
+For 1 GPU Inference with official Llama2-7B model and keep inference server alive:
 ```
 bash llm/run.sh -n llama2_7b -d data/summarize -m /mnt/llm -g 1 -e llama2_deploy -f '1.1.1.1:/llm' -k
 ```
@@ -129,7 +127,7 @@ For Llama2-7B model
 curl -v -H "Host: ${SERVICE_HOSTNAME}" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/llama2_7b/infer -d @./data/translate/sample_test1.json
 ```
 
-#### Stop Torchserve and Cleanup
+#### Cleanup Inference deployment
 
 If keep alive flag was set in the bash script, then you can run the following command to stop the server and clean up temporary files
 ```
