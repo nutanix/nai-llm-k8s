@@ -124,7 +124,7 @@ SERVICE_HOSTNAME=$(kubectl get inferenceservice <DEPLOYMENT_NAME> -o jsonpath='{
 SERVICE_HOSTNAME=$(kubectl get inferenceservice llm-deploy -o jsonpath='{.status.url}' | cut -d "/" -f 3)
 ```
 
-curl -v -H "Host: ${SERVICE_HOSTNAME}" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/${MODEL_NAME}/infer -d @data.json
+curl -v -H "Host: ${SERVICE_HOSTNAME}" -H "Content-Type: application/json" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/${MODEL_NAME}/infer -d @data.json
 Test input file can be found in the data folder.
 
 
@@ -145,7 +145,7 @@ curl -v -H "Host: ${SERVICE_HOSTNAME}" -H "Content-Type: application/json" http:
 
 If keep alive flag was set in the bash script, then you can run the following command to stop the server and clean up temporary files
 
-python3 llm/utils/cleanup.py --deploy_name <DEPLOYMENT_NAME>
+python3 $WORK_DIR/llm/utils/cleanup.py --deploy_name <DEPLOYMENT_NAME>
 
 ```
 python3 $WORK_DIR/llm/utils/cleanup.py --deploy_name llm-deploy
