@@ -8,6 +8,13 @@
 
 Download and set up KubeConfig by following the steps outlined in “Downloading the Kubeconfig” on the Nutanix Support Portal.
 
+Have a NFS mounted into your jump machine at a specific location. This mount location is required to be supplied as parameter to the execution scripts
+
+Command to mount NFS to local folder
+```
+mount -t nfs -o <ip>:<share path> <NFS_LOCAL_MOUNT_LOCATION>
+```
+
 Configure Nvidia Driver in the cluster using helm commands:
 
 ```
@@ -28,24 +35,27 @@ Install pip3:
 sudo apt-get install python3-pip
 ```
 
+Set Working Directory
+```
+export WORK_DIR=/home/ubuntu/nai-llm-k8s
+```
+
 Install required packages:
 
 ```
-pip install -r requirements.txt
+pip install -r $WORK_DIR/llm/requirements.txt
 ```
 
 ### Scripts
 
 #### Download model files and Generate MAR file
-Run the following command for downloading model files and/or generating MAR file: 
+Run the following command for downloading model files and generating MAR file: 
 ```
-python3 download_script.py [--no_download] [--no_generate] --model_name <MODEL_NAME> --model_path <MODEL_PATH> --mar_output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
+python3 download.py [--no_download] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
 ```
 - no_download:      Set flag to skip downloading the model files
-- no_generate:      Set flag to skip generating MAR file
 - model_name:       Name of model
-- model_path:       Absolute path of model files
-- mar_output:       Mount path to your nfs server to be used in the kube PV
+- output:           Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
 - hf_token:         Your HuggingFace token. Needed to download LLAMA(2) models.
 
 The available LLMs are mpt_7b, falcon_7b, llama2_7b
@@ -54,20 +64,20 @@ The available LLMs are mpt_7b, falcon_7b, llama2_7b
 
 Download MPT-7B model files(13 GB) and generate model archive(9.83 GB) for it:
 ```
-python3 llm/download.py --model_name mpt_7b --model_path /home/ubuntu/models/mpt_7b/model_files --mar_output /mnt/llm
+python3 $WORK_DIR/llm/download.py --model_name mpt_7b --output /mnt/llm
 ```
 Download Falcon-7B model files(14 GB) and generate model archive(10.69 GB) for it:
 ```
-python3 llm/download.py --model_name falcon_7b --model_path /home/ubuntu/models/falcon_7b/model_files --mar_output /mnt/llm
+python3 $WORK_DIR/llm/download.py --model_name falcon_7b --output /mnt/llm
 ```
 Download Llama2-7B model files(26 GB) and generate model archive(9.66 GB) for it:
 ```
-python3 llm/download.py --model_name llama2_7b --model_path /home/ubuntu/models/llama2_7b/model_files --mar_output /mnt/llm --hf_token <token_value>
+python3 $WORK_DIR/llm/download.py --model_name llama2_7b --output /mnt/llm --hf_token <token_value>
 ```
 
-#### Start Torchserve and run inference
+#### Start and run Kubeflow Serving
 
-Run the following command for starting Torchserve and running inference on the given input:
+Run the following command for starting Kubeflow serving and running inference on the given input:
 ```
 bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -m <NFS_LOCAL_MOUNT_LOCATION> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -k]
 ```
@@ -75,28 +85,27 @@ bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -m <NFS_LOCAL_MOUNT_L
 - n:    Name of model
 - d:    Absolute path of input data folder
 - g:    Number of gpus to be used to execute (Set 0 to use cpu)
-- a:    Absolute path to the MAR file (.mar)
 - m:    Absolute path to the NFS local mount location
 - f:    NFS server address with share path information
 - e:    Name of the deployment metadata
 
 “-k” would keep the server alive and needs to stopped explicitly
-For model names, we support MPT-7B, Falcon-7b and Llama2-7B.
+For model names, we support MPT-7B, Falcon-7B and Llama2-7B.
 Should print "Inference Run Successful" as a message at the end
 
 ##### Examples
 
-For 1 GPU Inference with official MPT-7B model and keep torchserve alive:
+For 1 GPU Inference with official MPT-7B model and keep inference server alive:
 ```
-bash llm/run.sh -n mpt_7b -d data/translate -m /mnt/llm -g 1 -e mpt_deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n mpt_7b -d data/translate -m /mnt/llm -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
 ```
-For 1 GPU Inference with official Falcon-7B model and keep torchserve alive:
+For 1 GPU Inference with official Falcon-7B model and keep inference server alive:
 ```
-bash llm/run.sh -n falcon_7b -d data/qa -m /mnt/llm -g 1 -e falcon_deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -m /mnt/llm -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
 ```
-For 1 GPU Inference with official Llama2-7B model and keep torchserve alive:
+For 1 GPU Inference with official Llama2-7B model and keep inference server alive:
 ```
-bash llm/run.sh -n llama2_7b -d data/summarize -m /mnt/llm -g 1 -e llama2_deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -m /mnt/llm -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
 ```
 
 #### Inference Check
@@ -108,30 +117,36 @@ export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -
 ```
 
 set Service Host Name
+
+SERVICE_HOSTNAME=$(kubectl get inferenceservice <DEPLOYMENT_NAME> -o jsonpath='{.status.url}' | cut -d "/" -f 3)
+
 ```
-SERVICE_HOSTNAME=$(kubectl get inferenceservice <deployment_name> -o jsonpath='{.status.url}' | cut -d "/" -f 3)
+SERVICE_HOSTNAME=$(kubectl get inferenceservice llm-deploy -o jsonpath='{.status.url}' | cut -d "/" -f 3)
 ```
 
-curl -v -H "Host: ${SERVICE_HOSTNAME}" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/${MODEL_NAME}/infer -d @./data.json
+curl -v -H "Host: ${SERVICE_HOSTNAME}" -H "Content-Type: application/json" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/${MODEL_NAME}/infer -d @data.json
 Test input file can be found in the data folder.
 
 
 For MPT-7B model
 ```
-curl -v -H "Host: ${SERVICE_HOSTNAME}" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/mpt_7b/infer -d @./data/qa/sample_test1.json
+curl -v -H "Host: ${SERVICE_HOSTNAME}" -H "Content-Type: application/json" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/mpt_7b/infer -d @$WORK_DIR/data/qa/sample_test1.json
 ```
 For Falcon-7B model
 ```
-curl -v -H "Host: ${SERVICE_HOSTNAME}" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/falcon_7b/infer -d @./data/summarize/sample_test1.json
+curl -v -H "Host: ${SERVICE_HOSTNAME}" -H "Content-Type: application/json" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/falcon_7b/infer -d @$WORK_DIR/data/summarize/sample_test1.json
 ```
 For Llama2-7B model
 ```
-curl -v -H "Host: ${SERVICE_HOSTNAME}" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/llama2_7b/infer -d @./data/translate/sample_test1.json
+curl -v -H "Host: ${SERVICE_HOSTNAME}" -H "Content-Type: application/json" http://${INGRESS_HOST}:${INGRESS_PORT}/v2/models/llama2_7b/infer -d @$WORK_DIR/data/translate/sample_test1.json
 ```
 
-#### Stop Torchserve and Cleanup
+#### Cleanup Inference deployment
 
 If keep alive flag was set in the bash script, then you can run the following command to stop the server and clean up temporary files
+
+python3 $WORK_DIR/llm/utils/cleanup.py --deploy_name <DEPLOYMENT_NAME>
+
 ```
-python3 llm/utils/cleanup.py --deploy_name <deployment_name>
+python3 $WORK_DIR/llm/utils/cleanup.py --deploy_name llm-deploy
 ```
