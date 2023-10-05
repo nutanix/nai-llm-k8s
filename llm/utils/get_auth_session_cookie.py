@@ -1,5 +1,8 @@
 """
 Script to get auth session cookie
+
+Usage:
+python get_auth_session_cookie.py --email <EMAIL> --password <PASSWORD>
 """
 import argparse
 import os
@@ -7,7 +10,11 @@ import requests
 import sys
 
 
-def get_auth_session_cookie(email: str, password: str):
+def get_auth_session_cookie(email: str, password: str) -> str:
+    """
+    Function to get authservice_session cookie from dex idp.
+    It requires INGRESS_HOST and INGRESS_HOST to be set as env variables.
+    """
     ingress_host = os.getenv("INGRESS_HOST")
     if not ingress_host:
         print("INGRESS_HOST env variable is not set")
@@ -27,8 +34,7 @@ def get_auth_session_cookie(email: str, password: str):
     }
     data = {"login": email, "password": password}
     session.post(response.url, headers=headers, data=data)
-    session_cookie = session.cookies.get_dict()["authservice_session"]
-    print(session_cookie)
+    return session.cookies.get_dict()["authservice_session"]
 
 
 if __name__ == '__main__':
@@ -36,14 +42,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script to get auth session cookie.')
 
     # Add arguments
-    parser.add_argument('--email', type=str, help='name of the deployment')
-    parser.add_argument('--password', type=str, help='name of the deployment')
+    parser.add_argument('--email', type=str, help='user email', required=True)
+    parser.add_argument('--password', type=str, help='user password', required=True)
 
     # Parse the command-line arguments
     args = parser.parse_args()
 
-    if not args.email or not args.password:
-        print("Email/Password not provided")
-        sys.exit(1)
-
-    get_auth_session_cookie(args.email, args.password)
+    session_cookie = get_auth_session_cookie(args.email, args.password)
+    print(session_cookie)
