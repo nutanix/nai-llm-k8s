@@ -7,8 +7,7 @@ MEM_pod="32Gi"
 
 function helpFunction()
 {
-    echo "Usage: $0 -n <MODEL_NAME> -d <INPUT_DATA_ABSOLUTE_PATH>  -g <NUM_OF_GPUS> -m <NFS_LOCAL_MOUNT_LOCATION> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -k]"
-    echo -e "\t-m Absolute path to the NFS local mount location"
+    echo "Usage: $0 -n <MODEL_NAME> -d <INPUT_DATA_ABSOLUTE_PATH>  -g <NUM_OF_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -k]"
     echo -e "\t-f NFS server address with share path information"
     echo -e "\t-e Name of the deployment metadata"
     echo -e "\t-o Choice of compute infra to be run on"
@@ -34,11 +33,6 @@ function inference_exec_kubernetes()
         gpus="0"
     fi
 
-    if [ -z $mount_path ] ; then
-        echo "Local mount path not provided"
-        helpFunction
-    fi
-
     if [ -z $nfs ] ; then
         echo "NFS info not provided"
         helpFunction
@@ -49,14 +43,11 @@ function inference_exec_kubernetes()
         helpFunction
     fi
 
-    mkdir $mount_path/$model_name/config
-    cp $wdir/config.properties $mount_path/$model_name/config/
-
     export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
     export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
 
     echo "Running the Inference script";
-    python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_pod --mem $MEM_pod --model_name $model_name --mount_path $mount_path --nfs $nfs --deploy_name $deploy_name --data $data
+    python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_pod --mem $MEM_pod --model_name $model_name --nfs $nfs --deploy_name $deploy_name --data $data
 
     if [ -z $stop_server ] ; then
         python3 $wdir/utils/cleanup.py --deploy_name $deploy_name
@@ -70,7 +61,6 @@ do
         n ) model_name="$OPTARG" ;;
         d ) data="$OPTARG" ;;
         g ) gpus="$OPTARG" ;;
-        m ) mount_path="$OPTARG" ;;
         f ) nfs="$OPTARG" ;;
         e ) deploy_name="$OPTARG" ;;
         k ) stop_server=0 ;;
