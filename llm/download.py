@@ -4,9 +4,11 @@ import json
 import sys
 from huggingface_hub import snapshot_download
 import utils.marsgen as mg
-from utils.system_utils import check_if_path_exists, create_folder_if_not_exits, delete_directory
+from utils.system_utils import check_if_path_exists, create_folder_if_not_exits, delete_directory, copy_file
 
-MODEL_STORE = 'model-store'
+CONFIG_DIR = 'config'
+CONFIG_FILE = 'config.properties'
+MODEL_STORE_DIR = 'model-store'
 MODEL_FILES_LOCATION = 'download'
 
 
@@ -83,6 +85,26 @@ def create_mar(dl_model):
                      debug=dl_model.debug)
 
 
+def set_config(model_name, mount_path):
+    model_spec_path = os.path.join(mount_path, model_name)
+    config_folder_path = os.path.join(model_spec_path, CONFIG_DIR)
+    delete_directory(config_folder_path)
+    create_folder_if_not_exits(config_folder_path)
+
+    src_config_file = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
+    config_file_path = os.path.join(config_folder_path, CONFIG_FILE)
+    copy_file(src_config_file, config_file_path)
+
+    check_if_path_exists(config_file_path, 'Config')
+    check_if_path_exists(os.path.join(model_spec_path, MODEL_STORE_DIR, model_name+'.mar'), 'Model store') # Check if mar file exists
+
+    config_info = ['\ninstall_py_dep_per_model=true\n', 'model_store=/mnt/models/model-store\n','model_snapshot={"name":"startup.cfg","modelCount":1,"models":{"'+model_name+'":{"1.0":{"defaultVersion":true,"marName":"'+model_name+'.mar","minWorkers":1,"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}']
+
+    with open(config_file_path, "a") as config_file:
+        config_file.writelines(config_info)
+
+
+
 def run_script(args):
     dl_model = set_values(args)
     check_if_path_exists(dl_model.output, "output")
@@ -93,10 +115,12 @@ def run_script(args):
         create_folder_if_not_exits(dl_model.model_path)
         dl_model = run_download(dl_model)
     
-    path = os.path.join(dl_model.output, dl_model.model_name, MODEL_STORE)
+    path = os.path.join(dl_model.output, dl_model.model_name, MODEL_STORE_DIR)
     create_folder_if_not_exits(path)
     dl_model.mar_output = path
     create_mar(dl_model)
+
+    set_config(dl_model.model_name, dl_model.output)
 
 
 if __name__ == '__main__':
