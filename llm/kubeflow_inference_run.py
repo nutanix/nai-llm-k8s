@@ -16,17 +16,6 @@ kubMemUnits = ['Ei', 'Pi', 'Ti', 'Gi', 'Mi', 'Ki']
 def get_inputs_from_folder(input_path):
     return [os.path.join(input_path, item) for item in os.listdir(input_path)] if input_path else []
 
-def set_config(model_name, mount_path):
-    model_spec_path = os.path.join(mount_path, model_name)
-    config_file_path = os.path.join(model_spec_path, CONFIG_DIR, CONFIG_FILE)
-    check_if_path_exists(config_file_path, 'Config')
-    check_if_path_exists(os.path.join(model_spec_path, MODEL_STORE_DIR, model_name+'.mar'), 'Model store') # Check if mar file exists
-
-    config_info = ['\ninstall_py_dep_per_model=true\n', 'model_store=/mnt/models/model-store\n','model_snapshot={"name":"startup.cfg","modelCount":1,"models":{"'+model_name+'":{"1.0":{"defaultVersion":true,"marName":"'+model_name+'.mar","minWorkers":1,"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}']
-
-    with open(config_file_path, "a") as config_file:
-        config_file.writelines(config_info)
-
 def create_pv(core_api, deploy_name, storage, nfs_server, nfs_path):
     # Create Persistent Volume
     persistent_volume = client.V1PersistentVolume(
@@ -176,7 +165,6 @@ def execute(args):
 
     storage = '100Gi'
 
-    set_config(model_name, args.mount_path)
     model_params = ts.get_model_params(model_name)
 
     config.load_kube_config()
@@ -207,7 +195,6 @@ if __name__ == '__main__':
     parser.add_argument('--cpu', type=int, help='number of cpus')
     parser.add_argument('--mem', type=str, help='memory required by the container')
     parser.add_argument('--model_name', type=str, help='name of the model to deploy')
-    parser.add_argument('--mount_path', type=str, help='local path to the nfs mount location')
     parser.add_argument('--deploy_name', type=str, help='name of the deployment')
     parser.add_argument('--data', type=str, help='data folder for the deployment validation')
 

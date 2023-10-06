@@ -19,3 +19,9 @@ def delete_directory(directory_path):
         print(f"Deleted all contents from '{directory_path}'")
     except Exception as e:
         print(f"Error deleting contents from '{directory_path}': {str(e)}")
+
+def copy_file(source_file, destination_file):
+    try:
+        shutil.copy(source_file, destination_file)
+    except Exception as e:
+        print(f"## Error: {e}")
