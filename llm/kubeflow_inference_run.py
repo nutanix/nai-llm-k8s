@@ -3,7 +3,7 @@ import sys
 import os
 import time
 import utils.tsutils as ts
-from utils.system_utils import check_if_path_exists
+from utils.system_utils import check_if_path_exists, create_folder_if_not_exits, copy_file
 from kubernetes import client, config
 from kserve import KServeClient, constants, V1beta1PredictorSpec, V1beta1TorchServeSpec, V1beta1InferenceServiceSpec, V1beta1InferenceService
 
@@ -15,6 +15,23 @@ kubMemUnits = ['Ei', 'Pi', 'Ti', 'Gi', 'Mi', 'Ki']
 
 def get_inputs_from_folder(input_path):
     return [os.path.join(input_path, item) for item in os.listdir(input_path)] if input_path else []
+
+"""def set_config(model_name, mount_path):
+    env_var_name = "NAI_"+model_name.upper()+"_REPO_VERSION"
+    model_repo_version = os.environ.get(env_var_name)
+    model_spec_path = os.path.join(mount_path, model_name, model_repo_version)
+    config_folder_path = os.path.join(model_spec_path, CONFIG_DIR)
+    create_folder_if_not_exits(config_folder_path)
+    source_config_file = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
+    config_file_path = os.path.join(config_folder_path, CONFIG_FILE)
+    copy_file(source_config_file, config_file_path)
+    check_if_path_exists(config_file_path, 'Config')
+    check_if_path_exists(os.path.join(model_spec_path, MODEL_STORE_DIR, model_name+'.mar'), 'Model store') # Check if mar file exists
+
+    config_info = ['\ninstall_py_dep_per_model=true\n', 'model_store=/mnt/models/model-store\n','model_snapshot={"name":"startup.cfg","modelCount":1,"models":{"'+model_name+'":{"1.0":{"defaultVersion":true,"marName":"'+model_name+'.mar","minWorkers":1,"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}']
+
+    with open(config_file_path, "a") as config_file:
+        config_file.writelines(config_info)"""
 
 def create_pv(core_api, deploy_name, storage, nfs_server, nfs_path):
     # Create Persistent Volume
@@ -71,7 +88,9 @@ def create_pvc(core_api, deploy_name, storage):
 
 
 def create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params):
-    storageuri = 'pvc://'+ deploy_name + '/' + model_name
+    env_var_name = "NAI_"+model_name.upper()+"_REPO_VERSION"
+    model_repo_version = os.environ.get(env_var_name)
+    storageuri = 'pvc://'+ deploy_name + '/' + model_name + '/' + model_repo_version
 
     default_model_spec = V1beta1InferenceServiceSpec(
         predictor=V1beta1PredictorSpec(
@@ -165,6 +184,7 @@ def execute(args):
 
     storage = '100Gi'
 
+    # set_config(model_name, args.mount_path)
     model_params = ts.get_model_params(model_name)
 
     config.load_kube_config()

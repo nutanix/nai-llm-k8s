@@ -40,7 +40,7 @@ def generate_mars(dl_model, mar_config, model_store_dir, debug=False):
         extra_files = None
         extra_files_list = os.listdir(dl_model.model_path)
         hf_api = HfApi()
-        repo_files = hf_api.list_repo_files(repo_id=dl_model.repo_id, token=dl_model.hf_token)
+        repo_files = hf_api.list_repo_files(repo_id=dl_model.repo_id, revision=dl_model.repo_version, token=dl_model.hf_token)
         repo_files = filter_files_by_extension(repo_files, FILE_EXTENSIONS_TO_IGNORE)
         if not compare_lists(extra_files_list, repo_files):  #checking if local model files are same the repository files
            print("## Model files do not match HuggingFace repository Files")
