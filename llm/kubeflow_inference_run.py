@@ -18,9 +18,9 @@ def get_inputs_from_folder(input_path):
     return [os.path.join(input_path, item) for item in os.listdir(input_path)] if input_path else []
 
 def get_repo_version(model_name, mount_path):
-    mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
-    check_if_path_exists(mar_config_path)
-    with open(mar_config_path) as f:
+    model_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
+    check_if_path_exists(model_config_path)
+    with open(model_config_path) as f:
         models = json.loads(f.read())
         if model_name in models:
             repo_version = models[model_name]['repo_version']
@@ -88,8 +88,7 @@ def create_pvc(core_api, deploy_name, storage):
 
 
 def create_isvc(deploy_name, model_name, repo_version, cpus, memory, gpus, model_params):
-    storageuri = 'pvc://'+ deploy_name + '/' + model_name + '/' + repo_version
-
+    storageuri = f'pvc://{deploy_name}/{model_name}/{repo_version}'
     default_model_spec = V1beta1InferenceServiceSpec(
         predictor=V1beta1PredictorSpec(
             pytorch=V1beta1TorchServeSpec(

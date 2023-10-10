@@ -48,7 +48,10 @@ def set_values(args):
     dl_model.repo_version = args.repo_version
     dl_model.hf_token = args.hf_token
     dl_model.debug = args.debug
-    get_repo_id_and_version(dl_model)
+    get_repo_id_version_and_handler(dl_model)
+    check_if_path_exists(dl_model.output, "output")
+    dl_model.model_path = os.path.join(dl_model.output, dl_model.model_name, dl_model.repo_version, MODEL_FILES_LOCATION)
+    dl_model.mar_output = os.path.join(dl_model.output, dl_model.model_name, dl_model.repo_version, MODEL_STORE_DIR)
     return dl_model
 
 
@@ -65,7 +68,7 @@ def set_config(dl_model):
     mar_filename = f"{dl_model.model_name}.mar"
     check_if_path_exists(os.path.join(model_spec_path, MODEL_STORE_DIR, mar_filename), 'Model store') # Check if mar file exists
 
-    config_info = ['\ninstall_py_dep_per_model=true\n', 'model_store=/mnt/models/model-store\n','model_snapshot={"name":"startup.cfg","modelCount":1,"models":{"'+dl_model.model_name+'":{"1.0":{"defaultVersion":true,"marName":"'+dl_model.model_name+'.mar","minWorkers":1,"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}']
+    config_info = ['\ninstall_py_dep_per_model=true\n', 'model_store=/mnt/models/model-store\n',f'model_snapshot={{"name":"startup.cfg","modelCount":1,"models":{{"{dl_model.model_name}":{{"1.0":{{"defaultVersion":true,"marName":"{dl_model.model_name}.mar","minWorkers":1,"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}}}}}']
 
     with open(config_file_path, "a") as config_file:
         config_file.writelines(config_info)
@@ -88,7 +91,7 @@ def check_if_mar_file_exist(dl_model):
         return False
 
 
-def get_repo_id_and_version(dl_model):
+def get_repo_id_version_and_handler(dl_model):
     mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
     check_if_path_exists(mar_config_path)
     with open(mar_config_path) as f:
@@ -105,6 +108,9 @@ def get_repo_id_and_version(dl_model):
 
                 hf_api = HfApi()
                 hf_api.list_repo_commits(repo_id=dl_model.repo_id, revision=dl_model.repo_version, token=dl_model.hf_token)
+                
+                if dl_model.handler_path == "":
+                    dl_model.handler_path = os.path.join(os.path.dirname(__file__), models[dl_model.model_name]["handler"])
             except Exception as ex:
                 print(f"## Error: Please check either repo_id or repo_version is not correct")
                 sys.exit(1)
@@ -144,11 +150,6 @@ def create_mar(dl_model):
         create_folder_if_not_exists(dl_model.mar_output)
         mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
         check_if_path_exists(mar_config_path)
-        if dl_model.handler_path == "":
-            with open(mar_config_path) as f:
-                models = json.loads(f.read())
-                if dl_model.model_name in models:
-                    dl_model.handler_path = os.path.join(os.path.dirname(__file__), models[dl_model.model_name]["handler"])
         
         mg.generate_mars(dl_model=dl_model, 
                         mar_config=mar_config_path,
@@ -158,12 +159,9 @@ def create_mar(dl_model):
 
 def run_script(args):
     dl_model = set_values(args)
-    check_if_path_exists(dl_model.output, "output")
-    dl_model.model_path = os.path.join(dl_model.output, dl_model.model_name, dl_model.repo_version, MODEL_FILES_LOCATION)
     if dl_model.download_model:
         dl_model = run_download(dl_model)
-    
-    dl_model.mar_output = os.path.join(dl_model.output, dl_model.model_name, dl_model.repo_version, MODEL_STORE_DIR)
+
     create_mar(dl_model)
     set_config(dl_model)
 
