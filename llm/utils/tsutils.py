@@ -4,18 +4,18 @@ import requests
 import collections
 
 def run_inference_v2(model_name, file_name, protocol="http", 
-                  host="localhost", port="8080", timeout=120, headers=None):
-    print(f"## Running inference on {model_name} model \n")
+                  host="localhost", port="8080", timeout=120, headers=None, debug=False):
+    debug and print(f"## Running inference on {model_name} model \n")
 
     url = f"{protocol}://{host}:{port}/v2/models/{model_name}/infer"
 
-    print("Url", url)
+    debug and print("Url", url)
     with open(file_name, 'r') as f:
         data = json.load(f)
-        print("Data", data, "\n")
+        debug and print("Data", data, "\n")
 
     response = requests.post(url, json=data, headers=headers, timeout=timeout)
-    print(response, "\n")
+    debug and print(response, "\n")
     return response
 
 def get_model_params(model_name):

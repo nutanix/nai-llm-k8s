@@ -12,7 +12,7 @@ Have a NFS mounted into your jump machine at a specific location. This mount loc
 
 Command to mount NFS to local folder
 ```
-mount -t nfs -o <ip>:<share path> <NFS_LOCAL_MOUNT_LOCATION>
+mount -t nfs <ip>:<share path> <NFS_LOCAL_MOUNT_LOCATION>
 ```
 
 Configure Nvidia Driver in the cluster using helm commands:
@@ -79,16 +79,14 @@ python3 $WORK_DIR/llm/download.py --model_name llama2_7b --output /mnt/llm --hf_
 
 Run the following command for starting Kubeflow serving and running inference on the given input:
 ```
-bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -k]
+bash run.sh  -n <MODEL_NAME> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -d <INPUT_PATH>]
 ```
-- k:    Set flag to keep server alive
 - n:    Name of model
-- d:    Absolute path of input data folder
+- d:    Absolute path of input data folder (Optional)
 - g:    Number of gpus to be used to execute (Set 0 to use cpu)
 - f:    NFS server address with share path information
 - e:    Name of the deployment metadata
 
-“-k” would keep the server alive and needs to stopped explicitly
 For model names, we support MPT-7B, Falcon-7B and Llama2-7B.
 Should print "Inference Run Successful" as a message at the end
 
@@ -96,15 +94,15 @@ Should print "Inference Run Successful" as a message at the end
 
 For 1 GPU Inference with official MPT-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n mpt_7b -d data/translate -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n mpt_7b -d data/translate -g 1 -e llm-deploy -f '1.1.1.1:/llm'
 ```
 For 1 GPU Inference with official Falcon-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -g 1 -e llm-deploy -f '1.1.1.1:/llm'
 ```
 For 1 GPU Inference with official Llama2-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -g 1 -e llm-deploy -f '1.1.1.1:/llm'
 ```
 
 #### Inference Check
