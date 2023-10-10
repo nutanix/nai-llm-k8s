@@ -2,8 +2,9 @@ import argparse
 import sys
 import os
 import time
+import json
 import utils.tsutils as ts
-from utils.system_utils import check_if_path_exists, create_folder_if_not_exits, copy_file
+from utils.system_utils import check_if_path_exists
 from kubernetes import client, config
 from kserve import KServeClient, constants, V1beta1PredictorSpec, V1beta1TorchServeSpec, V1beta1InferenceServiceSpec, V1beta1InferenceService
 
@@ -16,22 +17,21 @@ kubMemUnits = ['Ei', 'Pi', 'Ti', 'Gi', 'Mi', 'Ki']
 def get_inputs_from_folder(input_path):
     return [os.path.join(input_path, item) for item in os.listdir(input_path)] if input_path else []
 
-"""def set_config(model_name, mount_path):
-    env_var_name = "NAI_"+model_name.upper()+"_REPO_VERSION"
-    model_repo_version = os.environ.get(env_var_name)
-    model_spec_path = os.path.join(mount_path, model_name, model_repo_version)
-    config_folder_path = os.path.join(model_spec_path, CONFIG_DIR)
-    create_folder_if_not_exits(config_folder_path)
-    source_config_file = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
-    config_file_path = os.path.join(config_folder_path, CONFIG_FILE)
-    copy_file(source_config_file, config_file_path)
-    check_if_path_exists(config_file_path, 'Config')
-    check_if_path_exists(os.path.join(model_spec_path, MODEL_STORE_DIR, model_name+'.mar'), 'Model store') # Check if mar file exists
+def get_repo_version(model_name, mount_path):
+    mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
+    check_if_path_exists(mar_config_path)
+    with open(mar_config_path) as f:
+        models = json.loads(f.read())
+        if model_name in models:
+            repo_version = models[model_name]['version']
+    check_if_valid_version(model_name, repo_version, mount_path)
+    return repo_version
 
-    config_info = ['\ninstall_py_dep_per_model=true\n', 'model_store=/mnt/models/model-store\n','model_snapshot={"name":"startup.cfg","modelCount":1,"models":{"'+model_name+'":{"1.0":{"defaultVersion":true,"marName":"'+model_name+'.mar","minWorkers":1,"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}']
-
-    with open(config_file_path, "a") as config_file:
-        config_file.writelines(config_info)"""
+def check_if_valid_version(model_name, repo_version, mount_path):
+    model_spec_path = os.path.join(mount_path, model_name, repo_version)
+    if not os.path.exists(model_spec_path):
+        print(f"The Commit Id of {model_name} repository is not valid")
+        sys.exit(1)
 
 def create_pv(core_api, deploy_name, storage, nfs_server, nfs_path):
     # Create Persistent Volume
@@ -87,10 +87,13 @@ def create_pvc(core_api, deploy_name, storage):
     core_api.create_namespaced_persistent_volume_claim(body=persistent_volume_claim, namespace='default')
 
 
-def create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params):
-    env_var_name = "NAI_"+model_name.upper()+"_REPO_VERSION"
-    model_repo_version = os.environ.get(env_var_name)
-    storageuri = 'pvc://'+ deploy_name + '/' + model_name + '/' + model_repo_version
+def create_isvc(deploy_name, model_name, repo_version, mount_path, cpus, memory, gpus, model_params):
+    if not repo_version:
+       repo_version = get_repo_version(model_name, mount_path)
+    else:
+       check_if_valid_version(model_name, repo_version, mount_path)
+    
+    storageuri = 'pvc://'+ deploy_name + '/' + model_name + '/' + repo_version
 
     default_model_spec = V1beta1InferenceServiceSpec(
         predictor=V1beta1PredictorSpec(
@@ -177,33 +180,25 @@ def execute(args):
     deploy_name = args.deploy_name
     model_name = args.model_name
     input_path = args.data
-
+    repo_version = args.repo_version
+    mount_path=args.mount_path
     if not nfs_path or not nfs_server:
         print("NFS server and share path was not provided in accepted format - <address>:<share_path>")
         sys.exit(1)
 
     storage = '100Gi'
-
-    # set_config(model_name, args.mount_path)
     model_params = ts.get_model_params(model_name)
-
     config.load_kube_config()
     core_api = client.CoreV1Api()
-
     create_pv(core_api, deploy_name, storage, nfs_server, nfs_path)
-
     create_pvc(core_api, deploy_name, storage)
-
-    create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params)
-
+    create_isvc(deploy_name, model_name, repo_version, mount_path, cpus, memory, gpus, model_params)
     print("wait for model registration to complete, will take some time")
     time.sleep(240)
-
     if input_path:
         check_if_path_exists(input_path, 'Input')
         model_inputs = get_inputs_from_folder(input_path)
         execute_inference_on_inputs(model_inputs, model_name, deploy_name)
-
 
 if __name__ == '__main__':
     # Create the argument parser
@@ -216,8 +211,10 @@ if __name__ == '__main__':
     parser.add_argument('--mem', type=str, help='memory required by the container')
     parser.add_argument('--model_name', type=str, help='name of the model to deploy')
     parser.add_argument('--deploy_name', type=str, help='name of the deployment')
-    parser.add_argument('--data', type=str, help='data folder for the deployment validation')
-
+    parser.add_argument('--data', type=str, nargs='?', help='data folder for the deployment validation')
+    parser.add_argument('--repo_version', type=str, default=None, nargs='?',
+                        help='commit id of the HuggingFace Repo')
+    parser.add_argument('--mount_path', type=str, help='local path to the nfs mount location')
     # Parse the command-line arguments
     args = parser.parse_args()
     execute(args)

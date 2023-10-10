@@ -40,6 +40,7 @@ def set_values(args):
     dl_model.debug = args.debug
     return dl_model
 
+
 def set_config(dl_model):
     model_spec_path = os.path.join(dl_model.output, dl_model.model_name, dl_model.repo_version)
     config_folder_path = os.path.join(model_spec_path, CONFIG_DIR)
@@ -55,12 +56,14 @@ def set_config(dl_model):
     with open(config_file_path, "a") as config_file:
         config_file.writelines(config_info)
 
+
 def check_if_model_files_exist(dl_model):
     extra_files_list = os.listdir(dl_model.model_path)
     hf_api = HfApi()
     repo_files = hf_api.list_repo_files(repo_id=dl_model.repo_id, revision=dl_model.repo_version, token=dl_model.hf_token)
     repo_files = mg.filter_files_by_extension(repo_files, mg.FILE_EXTENSIONS_TO_IGNORE)
     return mg.compare_lists(extra_files_list, repo_files)
+
 
 def check_if_mar_file_exist(dl_model):
     mar_filename=dl_model.model_name+".mar"
@@ -69,6 +72,7 @@ def check_if_mar_file_exist(dl_model):
         return len(directory_contents) == 1 and directory_contents[0]==mar_filename
     else:
         return False
+
 
 def get_repo_id_and_version(dl_model):
     mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
@@ -79,13 +83,9 @@ def get_repo_id_and_version(dl_model):
             try:
                 dl_model.repo_id = models[dl_model.model_name]['repo_id']
                 if  dl_model.repo_version == "":
-                    dl_model.repo_version = models[dl_model.model_name]['repo_version']
-                env_var_name="NAI_"+dl_model.model_name.upper()+"_REPO_VERSION"
-                os.environ[env_var_name] = dl_model.repo_version
-                print(env_var_name)
-                print(os.environ.get(env_var_name))
+                    dl_model.repo_version = models[dl_model.model_name]['version']
                 hf_api = HfApi()
-                hf_api.list_repo_commits(repo_id=dl_model.repo_id, revision=dl_model.repo_version)
+                hf_api.list_repo_commits(repo_id=dl_model.repo_id, revision=dl_model.repo_version, token=dl_model.hf_token)
             except Exception as ex:
                 print(f"## Error: Please check either repo_id or repo_version is not correct")
                 sys.exit(1)
@@ -93,6 +93,7 @@ def get_repo_id_and_version(dl_model):
             print("## Please check your model name, it should be one of the following : ")
             print(list(models.keys()))
             sys.exit(1)
+
 
 def run_download(dl_model):
     if dl_model.repo_id.startswith("meta-llama") and dl_model.hf_token is None: # Make sure there is HF hub token for LLAMA(2)
@@ -117,21 +118,23 @@ def run_download(dl_model):
 
 
 def create_mar(dl_model):
-    check_if_path_exists(dl_model.model_path, "model_path")
-    create_folder_if_not_exits(dl_model.mar_output)
-    mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
-    check_if_path_exists(mar_config_path)
-    if dl_model.handler_path == "":
-        with open(mar_config_path) as f:
-            models = json.loads(f.read())
-            if dl_model.model_name in models:
-                dl_model.handler_path = os.path.join(os.path.dirname(__file__), models[dl_model.model_name]["handler"])
-    
-    mg.generate_mars(dl_model=dl_model, 
-                     mar_config=mar_config_path,
-                     model_store_dir=dl_model.mar_output,
-                     debug=dl_model.debug)
-
+    if check_if_mar_file_exist(dl_model):
+        print("## Model archive file is already present\n")
+    else:
+        check_if_path_exists(dl_model.model_path, "model_path")
+        create_folder_if_not_exits(dl_model.mar_output)
+        mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
+        check_if_path_exists(mar_config_path)
+        if dl_model.handler_path == "":
+            with open(mar_config_path) as f:
+                models = json.loads(f.read())
+                if dl_model.model_name in models:
+                    dl_model.handler_path = os.path.join(os.path.dirname(__file__), models[dl_model.model_name]["handler"])
+        
+        mg.generate_mars(dl_model=dl_model, 
+                        mar_config=mar_config_path,
+                        model_store_dir=dl_model.mar_output,
+                        debug=dl_model.debug)
 
 
 def run_script(args):
@@ -143,10 +146,7 @@ def run_script(args):
         dl_model = run_download(dl_model)
     
     dl_model.mar_output = os.path.join(dl_model.output, dl_model.model_name, dl_model.repo_version, MODEL_STORE_DIR)
-    if not check_if_mar_file_exist(dl_model):
-        create_mar(dl_model)
-    else:
-        print("## Model archive file is already present\n")
+    create_mar(dl_model)
     set_config(dl_model)
 
 if __name__ == '__main__':

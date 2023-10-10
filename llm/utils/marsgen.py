@@ -14,7 +14,7 @@ def compare_lists(list1, list2):
 
 def filter_files_by_extension(filenames, extensions_to_remove):
     pattern = '|'.join([re.escape(suffix) + '$' for suffix in extensions_to_remove]) 
-    # for the extensions in FILE_EXTENSIONS_TO_IGNORE pattern will be '\.safetensors|\.safetensors\.index\.json'
+    # for the extensions in FILE_EXTENSIONS_TO_IGNORE pattern will be '\.safetensors$|\.safetensors\.index\.json$'
     filtered_filenames = [filename for filename in filenames if not re.search(pattern, filename)]
     return filtered_filenames
 
@@ -72,7 +72,7 @@ def generate_mars(dl_model, mar_config, model_store_dir, debug=False):
             model_file_input = model["model_file"]
 
         cmd = model_archiver_command_builder(model["model_name"],
-                                             model["version"],
+                                             dl_model.repo_version,
                                              model_file_input,
                                              handler, extra_files,
                                              runtime, archive_format, 
