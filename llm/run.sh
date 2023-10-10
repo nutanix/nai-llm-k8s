@@ -2,8 +2,9 @@
 SCRIPT=$(realpath "$0")
 wdir=$(dirname "$SCRIPT")
 
-CPU_pod="8"
-MEM_pod="32Gi"
+CPU_POD="8"
+MEM_POD="32Gi"
+MODEL_TIMEOUT_IN_SEC="600"
 
 function helpFunction()
 {
@@ -45,7 +46,7 @@ function inference_exec_kubernetes()
     export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
     export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
 
-    exec_cmd="python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_pod --mem $MEM_pod --model_name $model_name --nfs $nfs --deploy_name $deploy_name"
+    exec_cmd="python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_POD --mem $MEM_POD --model_name $model_name --nfs $nfs --deploy_name $deploy_name --model_timeout $MODEL_TIMEOUT_IN_SEC"
 
     if [ ! -z $data ] ; then
         exec_cmd+=" --data $data"

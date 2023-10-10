@@ -150,16 +150,17 @@ def execute_inference_on_inputs(model_inputs, model_name, deploy_name, retry=Fal
                 sys.exit(1)
             return False
 
-def health_check(model_name, deploy_name):
+def health_check(model_name, deploy_name, model_timeout):
     model_input = os.path.join(os.path.dirname(__file__), PATH_TO_SAMPLE)
 
     retry_count = 0
+    sleep_time = 30
     success = False
-    while(not success and retry_count < 20):
+    while(not success and retry_count * sleep_time < model_timeout):
         success = execute_inference_on_inputs([model_input], model_name, deploy_name, retry=True)
 
         if not success:
-            time.sleep(30)
+            time.sleep(sleep_time)
             retry_count += 1
 
     if success:
@@ -180,6 +181,7 @@ def execute(args):
     deploy_name = args.deploy_name
     model_name = args.model_name
     input_path = args.data
+    model_timeout = args.model_timeout
 
     if not nfs_path or not nfs_server:
         print("NFS server and share path was not provided in accepted format - <address>:<share_path>")
@@ -199,7 +201,7 @@ def execute(args):
     create_isvc(deploy_name, model_name, cpus, memory, gpus, model_params)
 
     print("wait for model registration to complete, will take some time")
-    health_check(model_name, deploy_name)
+    health_check(model_name, deploy_name, model_timeout)
 
     if input_path:
         check_if_path_exists(input_path, 'Input')
@@ -218,6 +220,7 @@ if __name__ == '__main__':
     parser.add_argument('--mem', type=str, help='memory required by the container')
     parser.add_argument('--model_name', type=str, help='name of the model to deploy')
     parser.add_argument('--deploy_name', type=str, help='name of the deployment')
+    parser.add_argument('--model_timeout', type=int, help='Max time in seconds before deployment health check is terminated')
     parser.add_argument('--data', type=str, help='data folder for the deployment validation')
 
     # Parse the command-line arguments
