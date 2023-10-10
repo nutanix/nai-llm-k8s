@@ -12,6 +12,7 @@ CONFIG_DIR = 'config'
 CONFIG_FILE = 'config.properties'
 MODEL_STORE_DIR = 'model-store'
 MODEL_FILES_LOCATION = 'download'
+MODEL_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'model_config.json')
 FILE_EXTENSIONS_TO_IGNORE = [".safetensors", ".safetensors.index.json"]
 
 def get_ignore_pattern_list(extension_list):
@@ -92,9 +93,8 @@ def check_if_mar_file_exist(dl_model):
 
 
 def get_repo_id_version_and_handler(dl_model):
-    mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
-    check_if_path_exists(mar_config_path)
-    with open(mar_config_path) as f:
+    check_if_path_exists(MODEL_CONFIG_PATH)
+    with open(MODEL_CONFIG_PATH) as f:
         models = json.loads(f.read())
         if dl_model.model_name in models:
             try: # validation to check if model repo commit id is valid or not 
@@ -148,11 +148,9 @@ def create_mar(dl_model):
            sys.exit(1)
         
         create_folder_if_not_exists(dl_model.mar_output)
-        mar_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
-        check_if_path_exists(mar_config_path)
         
         mg.generate_mars(dl_model=dl_model, 
-                        mar_config=mar_config_path,
+                        model_config=MODEL_CONFIG_PATH,
                         model_store_dir=dl_model.mar_output,
                         debug=dl_model.debug)
 

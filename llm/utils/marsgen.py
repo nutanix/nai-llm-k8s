@@ -5,12 +5,12 @@ import subprocess
 from utils.system_utils import check_if_path_exists
 
 
-def generate_mars(dl_model, mar_config, model_store_dir, debug=False):
-    debug and print(f"## Starting generate_mars, mar_config:{mar_config}, model_store_dir:{model_store_dir}\n")
+def generate_mars(dl_model, model_config, model_store_dir, debug=False):
+    debug and print(f"## Starting generate_mars, mar_config:{model_config}, model_store_dir:{model_store_dir}\n")
     cwd = os.getcwd()
-    os.chdir(os.path.dirname(mar_config))
+    os.chdir(os.path.dirname(model_config))
 
-    with open(mar_config) as f:
+    with open(model_config) as f:
         models = json.loads(f.read())
         if dl_model.model_name not in models:
             print("## Please check your model name, it should be one of the following : ")

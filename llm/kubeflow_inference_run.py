@@ -17,16 +17,6 @@ kubMemUnits = ['Ei', 'Pi', 'Ti', 'Gi', 'Mi', 'Ki']
 def get_inputs_from_folder(input_path):
     return [os.path.join(input_path, item) for item in os.listdir(input_path)] if input_path else []
 
-def get_repo_version(model_name, mount_path):
-    model_config_path = os.path.join(os.path.dirname(__file__), 'model_config.json')
-    check_if_path_exists(model_config_path)
-    with open(model_config_path) as f:
-        models = json.loads(f.read())
-        if model_name in models:
-            repo_version = models[model_name]['repo_version']
-    check_if_valid_version(model_name, repo_version, mount_path)
-    return repo_version
-
 def check_if_valid_version(model_name, repo_version, mount_path):
     model_spec_path = os.path.join(mount_path, model_name, repo_version)
     if not os.path.exists(model_spec_path):
@@ -184,9 +174,9 @@ def execute(args):
 
     model_params = ts.get_model_params(model_name)
     if not repo_version:
-       repo_version = get_repo_version(model_name, mount_path)
-    else:
-       check_if_valid_version(model_name, repo_version, mount_path)
+       repo_version = model_params["repo_version"]
+
+    check_if_valid_version(model_name, repo_version, mount_path)
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
