@@ -87,7 +87,6 @@ bash run.sh  -n <MODEL_NAME> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <
 - f:    NFS server address with share path information
 - e:    Name of the deployment metadata
 
-“-k” would keep the server alive and needs to stopped explicitly
 For model names, we support MPT-7B, Falcon-7B and Llama2-7B.
 Should print "Inference Run Successful" as a message at the end
 
@@ -95,15 +94,15 @@ Should print "Inference Run Successful" as a message at the end
 
 For 1 GPU Inference with official MPT-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n mpt_7b -d data/translate -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n mpt_7b -d data/translate -g 1 -e llm-deploy -f '1.1.1.1:/llm'
 ```
 For 1 GPU Inference with official Falcon-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -g 1 -e llm-deploy -f '1.1.1.1:/llm'
 ```
 For 1 GPU Inference with official Llama2-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -g 1 -e llm-deploy -f '1.1.1.1:/llm'
 ```
 
 #### Inference Check
