@@ -2,21 +2,8 @@ import json
 import os
 import sys
 import subprocess
-import re
 from utils.system_utils import check_if_path_exists
-from huggingface_hub import HfApi
-from collections import Counter
 
-FILE_EXTENSIONS_TO_IGNORE = [".safetensors", ".safetensors.index.json"]
-
-def compare_lists(list1, list2):
-    return Counter(list1) == Counter(list2)
-
-def filter_files_by_extension(filenames, extensions_to_remove):
-    pattern = '|'.join([re.escape(suffix) + '$' for suffix in extensions_to_remove]) 
-    # for the extensions in FILE_EXTENSIONS_TO_IGNORE pattern will be '\.safetensors$|\.safetensors\.index\.json$'
-    filtered_filenames = [filename for filename in filenames if not re.search(pattern, filename)]
-    return filtered_filenames
 
 def generate_mars(dl_model, mar_config, model_store_dir, debug=False):
     debug and print(f"## Starting generate_mars, mar_config:{mar_config}, model_store_dir:{model_store_dir}\n")
@@ -39,13 +26,6 @@ def generate_mars(dl_model, mar_config, model_store_dir, debug=False):
 
         extra_files = None
         extra_files_list = os.listdir(dl_model.model_path)
-        hf_api = HfApi()
-        repo_files = hf_api.list_repo_files(repo_id=dl_model.repo_id, revision=dl_model.repo_version, token=dl_model.hf_token)
-        repo_files = filter_files_by_extension(repo_files, FILE_EXTENSIONS_TO_IGNORE)
-        if not compare_lists(extra_files_list, repo_files):  #checking if local model files are same the repository files
-           print("## Model files do not match HuggingFace repository Files")
-           sys.exit(1)
-
         extra_files_list = [os.path.join(dl_model.model_path, file) for file in extra_files_list]
         extra_files = ','.join(extra_files_list)
         
@@ -71,7 +51,7 @@ def generate_mars(dl_model, mar_config, model_store_dir, debug=False):
         if model.get("model_file") and model["model_file"]:
             model_file_input = model["model_file"]
 
-        cmd = model_archiver_command_builder(model["model_name"],
+        cmd = model_archiver_command_builder(dl_model.model_name,
                                              dl_model.repo_version,
                                              model_file_input,
                                              handler, extra_files,
@@ -84,7 +64,7 @@ def generate_mars(dl_model, mar_config, model_store_dir, debug=False):
 
         try:
             subprocess.check_call(cmd, shell=True)
-            marfile = "{}.mar".format(model["model_name"])
+            marfile = "{}.mar".format(dl_model.model_name)
             print(f"## {marfile} is generated.\n")
         except subprocess.CalledProcessError as exc:
             print("## Creation failed !\n")

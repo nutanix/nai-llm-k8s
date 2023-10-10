@@ -23,14 +23,14 @@ def get_repo_version(model_name, mount_path):
     with open(mar_config_path) as f:
         models = json.loads(f.read())
         if model_name in models:
-            repo_version = models[model_name]['version']
+            repo_version = models[model_name]['repo_version']
     check_if_valid_version(model_name, repo_version, mount_path)
     return repo_version
 
 def check_if_valid_version(model_name, repo_version, mount_path):
     model_spec_path = os.path.join(mount_path, model_name, repo_version)
     if not os.path.exists(model_spec_path):
-        print(f"The Commit Id of {model_name} repository is not valid")
+        print(f"## ERROR: The {model_name} model files for given commit ID are not downloaded")
         sys.exit(1)
 
 def create_pv(core_api, deploy_name, storage, nfs_server, nfs_path):
@@ -87,12 +87,7 @@ def create_pvc(core_api, deploy_name, storage):
     core_api.create_namespaced_persistent_volume_claim(body=persistent_volume_claim, namespace='default')
 
 
-def create_isvc(deploy_name, model_name, repo_version, mount_path, cpus, memory, gpus, model_params):
-    if not repo_version:
-       repo_version = get_repo_version(model_name, mount_path)
-    else:
-       check_if_valid_version(model_name, repo_version, mount_path)
-    
+def create_isvc(deploy_name, model_name, repo_version, cpus, memory, gpus, model_params):
     storageuri = 'pvc://'+ deploy_name + '/' + model_name + '/' + repo_version
 
     default_model_spec = V1beta1InferenceServiceSpec(
@@ -181,20 +176,29 @@ def execute(args):
     model_name = args.model_name
     input_path = args.data
     repo_version = args.repo_version
-    mount_path=args.mount_path
+    mount_path = args.mount_path
     if not nfs_path or not nfs_server:
         print("NFS server and share path was not provided in accepted format - <address>:<share_path>")
         sys.exit(1)
 
     storage = '100Gi'
+
     model_params = ts.get_model_params(model_name)
+    if not repo_version:
+       repo_version = get_repo_version(model_name, mount_path)
+    else:
+       check_if_valid_version(model_name, repo_version, mount_path)
+
     config.load_kube_config()
     core_api = client.CoreV1Api()
+
     create_pv(core_api, deploy_name, storage, nfs_server, nfs_path)
     create_pvc(core_api, deploy_name, storage)
-    create_isvc(deploy_name, model_name, repo_version, mount_path, cpus, memory, gpus, model_params)
+    create_isvc(deploy_name, model_name, repo_version, cpus, memory, gpus, model_params)
+
     print("wait for model registration to complete, will take some time")
     time.sleep(240)
+
     if input_path:
         check_if_path_exists(input_path, 'Input')
         model_inputs = get_inputs_from_folder(input_path)
@@ -211,9 +215,8 @@ if __name__ == '__main__':
     parser.add_argument('--mem', type=str, help='memory required by the container')
     parser.add_argument('--model_name', type=str, help='name of the model to deploy')
     parser.add_argument('--deploy_name', type=str, help='name of the deployment')
-    parser.add_argument('--data', type=str, nargs='?', help='data folder for the deployment validation')
-    parser.add_argument('--repo_version', type=str, default=None, nargs='?',
-                        help='commit id of the HuggingFace Repo')
+    parser.add_argument('--data', type=str, help='data folder for the deployment validation')
+    parser.add_argument('--repo_version', type=str, default=None, help='commit id of the HuggingFace Repo')
     parser.add_argument('--mount_path', type=str, help='local path to the nfs mount location')
     # Parse the command-line arguments
     args = parser.parse_args()

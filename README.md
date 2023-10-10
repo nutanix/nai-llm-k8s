@@ -51,7 +51,7 @@ pip install -r $WORK_DIR/llm/requirements.txt
 #### Download model files and Generate MAR file
 Run the following command for downloading model files and generating MAR file: 
 ```
-python3 download.py [--no_download] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION> --repo_version <REPO_COMMIT_ID>  --hf_token <Your_HuggingFace_Hub_Token>
+python3 download.py [--no_download --repo_version <REPO_COMMIT_ID>] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION> --hf_token <Your_HuggingFace_Hub_Token>
 ```
 - no_download:      Set flag to skip downloading the model files
 - model_name:       Name of model
@@ -80,7 +80,7 @@ python3 $WORK_DIR/llm/download.py --model_name llama2_7b --output /mnt/llm --rep
 
 Run the following command for starting Kubeflow serving and running inference on the given input:
 ```
-bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> -v <REPO_COMMIT_ID> [OPTIONAL -k]
+bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -v <REPO_COMMIT_ID> -k]
 ```
 - k:    Set flag to keep server alive
 - n:    Name of model

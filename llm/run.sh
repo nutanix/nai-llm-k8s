@@ -7,7 +7,7 @@ MEM_pod="32Gi"
 
 function helpFunction()
 {
-    echo "Usage: $0 -n <MODEL_NAME> -d <INPUT_DATA_ABSOLUTE_PATH>  -g <NUM_OF_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> -v <REPO_COMMIT_ID> [OPTIONAL -k]"
+    echo "Usage: $0 -n <MODEL_NAME> -d <INPUT_DATA_ABSOLUTE_PATH>  -g <NUM_OF_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -v <REPO_COMMIT_ID> -k]"
     echo -e "\t-f NFS server address with share path information"
     echo -e "\t-m Absolute path to the NFS local mount location"
     echo -e "\t-e Name of the deployment metadata"
@@ -54,7 +54,17 @@ function inference_exec_kubernetes()
     export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
     
     echo "Running the Inference script";
-    python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_pod --mem $MEM_pod --model_name $model_name --nfs $nfs --deploy_name $deploy_name --data $data --repo_version $repo_version --mount_path $mount_path
+    cmd="python3 $wdir/kubeflow_inference_run.py --gpu $gpus --cpu $CPU_pod --mem $MEM_pod --model_name $model_name --nfs $nfs --deploy_name $deploy_name --mount_path $mount_path"
+    
+    if [ ! -z $data ] ; then
+        cmd+=" --data $data"
+    fi
+    
+    if [ ! -z $repo_version ] ; then
+        cmd+=" --repo_version $repo_version"
+    fi
+    
+    $cmd
 
     if [ -z $stop_server ] ; then
         python3 $wdir/utils/cleanup.py --deploy_name $deploy_name
