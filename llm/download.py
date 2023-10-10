@@ -10,8 +10,6 @@ CONFIG_DIR = 'config'
 CONFIG_FILE = 'config.properties'
 MODEL_STORE_DIR = 'model-store'
 MODEL_FILES_LOCATION = 'download'
-CONFIG_DIR = 'config'
-CONFIG_FILE = 'config.properties'
 
 def get_ignore_pattern_list(extension_list):
     return ["*"+pattern for pattern in extension_list]
