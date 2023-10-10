@@ -145,8 +145,8 @@ def execute_inference_on_inputs(model_inputs, model_name, deploy_name, retry=Fal
             not retry and print(f"## Successfully ran inference on {model_name} model. \n\n Output - {response.text}\n\n")
             return True
         else:
-            not retry and print(f"## Failed to run inference on {model_name} - model \n")
             if not retry:
+                print(f"## Failed to run inference on {model_name} - model \n")
                 sys.exit(1)
             return False
 
@@ -155,7 +155,7 @@ def health_check(model_name, deploy_name):
 
     retry_count = 0
     success = False
-    while(not success and retry_count < 10):
+    while(not success and retry_count < 20):
         success = execute_inference_on_inputs([model_input], model_name, deploy_name, retry=True)
 
         if not success:
