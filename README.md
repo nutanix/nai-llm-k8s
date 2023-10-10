@@ -87,7 +87,7 @@ bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_
 - d:    Absolute path of input data folder
 - g:    Number of gpus to be used to execute (Set 0 to use cpu)
 - f:    NFS server address with share path information
-- m:    Absolute path to the NFS local mount location
+- m:    Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
 - e:    Name of the deployment metadata
 - v:    Commit id of model's repo from HuggingFace (optional, if not provided default set in model_config will be used)
 
