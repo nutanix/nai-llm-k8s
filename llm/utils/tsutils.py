@@ -1,9 +1,9 @@
 import os
 import json
-import requests
 import collections
+import requests
 
-def run_inference_v2(model_name, file_name, protocol="http", 
+def run_inference_v2(model_name, file_name, protocol="http",
                   host="localhost", port="8080", timeout=120, headers=None, debug=False):
     debug and print(f"## Running inference on {model_name} model \n")
 
@@ -24,6 +24,8 @@ def get_model_params(model_name):
     dirpath = os.path.dirname(__file__)    
     with open(os.path.join(dirpath, '../model_config.json'), 'r') as file:
         model_config = json.loads(file.read())
+        if model_name in model_config:
+            model_params["repo_version"] = model_config[model_name]['repo_version']
         if model_name in model_config and "model_params" in model_config[model_name]:
             param_config = model_config[model_name]["model_params"]
             if "temperature" in param_config:
