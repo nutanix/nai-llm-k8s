@@ -24,8 +24,6 @@ def kubernetes(deploy_name):
         core_api.delete_persistent_volume(name=deploy_name)
     except:
         print("PV delete triggered")
-    
-    
 
 
 if __name__ == '__main__':

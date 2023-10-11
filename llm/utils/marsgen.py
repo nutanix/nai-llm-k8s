@@ -38,8 +38,8 @@ def generate_mars(dl_model, model_config, model_store_dir, debug=False):
 
         cmd = model_archiver_command_builder(model_name=dl_model.model_name,
                                              version=dl_model.repo_version,
-                                             handler=handler, 
-                                             extra_files=extra_files, 
+                                             handler=handler,
+                                             extra_files=extra_files,
                                              requirements_file=requirements_file,
                                              export_path=export_path,
                                              debug=debug)
