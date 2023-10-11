@@ -161,7 +161,7 @@ def execute_inference_on_inputs(model_inputs, model_name, deploy_name, retry=Fal
             is_success = True
         else:
             if not retry:
-                print(f"## Failed to run inference on {model_name} - model \n")
+                debug and print(f"## Failed to run inference on {model_name} - model \n")
                 sys.exit(1)
             is_success = False
     return is_success
