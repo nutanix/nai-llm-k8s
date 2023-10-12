@@ -10,7 +10,8 @@ from utils.system_utils import (
     check_if_path_exists,
     create_folder_if_not_exists,
     delete_directory,
-    copy_file
+    copy_file,
+    get_all_files_in_directory
 )
 
 CONFIG_DIR = 'config'
@@ -18,7 +19,7 @@ CONFIG_FILE = 'config.properties'
 MODEL_STORE_DIR = 'model-store'
 MODEL_FILES_LOCATION = 'download'
 MODEL_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'model_config.json')
-FILE_EXTENSIONS_TO_IGNORE = [".safetensors", ".safetensors.index.json"]
+FILE_EXTENSIONS_TO_IGNORE = [".safetensors", ".safetensors.index.json", ".h5", ".ot", ".tflite", ".msgpack", ".onnx"]
 
 def get_ignore_pattern_list(extension_list):
     return ["*"+pattern for pattern in extension_list]
@@ -87,7 +88,7 @@ def set_config(dl_model):
 
 
 def check_if_model_files_exist(dl_model):
-    extra_files_list = os.listdir(dl_model.model_path)
+    extra_files_list = get_all_files_in_directory(dl_model.model_path)
     hf_api = HfApi()
     repo_files = hf_api.list_repo_files(repo_id=dl_model.repo_id, 
                                         revision=dl_model.repo_version, 
