@@ -12,7 +12,7 @@ Have a NFS mounted into your jump machine at a specific location. This mount loc
 
 Command to mount NFS to local folder
 ```
-mount -t nfs -o <ip>:<share path> <NFS_LOCAL_MOUNT_LOCATION>
+mount -t nfs <ip>:<share path> <NFS_LOCAL_MOUNT_LOCATION>
 ```
 
 Configure Nvidia Driver in the cluster using helm commands:
@@ -25,7 +25,7 @@ helm install --wait -n gpu-operator --create-namespace gpu-operator nvidia/gpu-o
 ### Kubeflow serving installation
 
 ```
-curl -s "https://raw.githubusercontent.com/kserve/kserve/v0.11.0/hack/quick_install.sh" | bash
+curl -s "https://raw.githubusercontent.com/kserve/kserve/v0.11.1/hack/quick_install.sh" | bash
 ```
 
 ### Setup
@@ -51,26 +51,27 @@ pip install -r $WORK_DIR/llm/requirements.txt
 #### Download model files and Generate MAR file
 Run the following command for downloading model files and generating MAR file: 
 ```
-python3 download.py [--no_download] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION>  --hf_token <Your_HuggingFace_Hub_Token>
+python3 download.py [--no_download --repo_version <REPO_COMMIT_ID>] --model_name <MODEL_NAME> --output <NFS_LOCAL_MOUNT_LOCATION> --hf_token <Your_HuggingFace_Hub_Token>
 ```
 - no_download:      Set flag to skip downloading the model files
 - model_name:       Name of model
 - output:           Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
+- repo_version:     Commit id of model's repo from HuggingFace (optional, if not provided default set in model_config will be used)
 - hf_token:         Your HuggingFace token. Needed to download LLAMA(2) models.
 
 The available LLMs are mpt_7b, falcon_7b, llama2_7b
 
 ##### Examples
 
-Download MPT-7B model files(13 GB) and generate model archive(9.83 GB) for it:
+Download MPT-7B model files and generate model archive for it:
 ```
 python3 $WORK_DIR/llm/download.py --model_name mpt_7b --output /mnt/llm
 ```
-Download Falcon-7B model files(14 GB) and generate model archive(10.69 GB) for it:
+Download Falcon-7B model files and generate model archive for it:
 ```
 python3 $WORK_DIR/llm/download.py --model_name falcon_7b --output /mnt/llm
 ```
-Download Llama2-7B model files(26 GB) and generate model archive(9.66 GB) for it:
+Download Llama2-7B model files and generate model archive for it:
 ```
 python3 $WORK_DIR/llm/download.py --model_name llama2_7b --output /mnt/llm --hf_token <token_value>
 ```
@@ -79,16 +80,16 @@ python3 $WORK_DIR/llm/download.py --model_name llama2_7b --output /mnt/llm --hf_
 
 Run the following command for starting Kubeflow serving and running inference on the given input:
 ```
-bash run.sh  -n <MODEL_NAME> -d <INPUT_PATH> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -k]
+bash run.sh  -n <MODEL_NAME> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -d <INPUT_PATH> -v <REPO_COMMIT_ID>]
 ```
-- k:    Set flag to keep server alive
 - n:    Name of model
-- d:    Absolute path of input data folder
+- d:    Absolute path of input data folder (Optional)
 - g:    Number of gpus to be used to execute (Set 0 to use cpu)
 - f:    NFS server address with share path information
+- m:    Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
 - e:    Name of the deployment metadata
+- v:    Commit id of model's repo from HuggingFace (optional, if not provided default set in model_config will be used)
 
-“-k” would keep the server alive and needs to stopped explicitly
 For model names, we support MPT-7B, Falcon-7B and Llama2-7B.
 Should print "Inference Run Successful" as a message at the end
 
@@ -96,15 +97,15 @@ Should print "Inference Run Successful" as a message at the end
 
 For 1 GPU Inference with official MPT-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n mpt_7b -d data/translate -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n mpt_7b -d data/translate -g 1 -e llm-deploy -f '1.1.1.1:/llm' -m /mnt/llm
 ```
 For 1 GPU Inference with official Falcon-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -g 1 -e llm-deploy -f '1.1.1.1:/llm' -m /mnt/llm
 ```
 For 1 GPU Inference with official Llama2-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -g 1 -e llm-deploy -f '1.1.1.1:/llm' -k
+bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -g 1 -e llm-deploy -f '1.1.1.1:/llm' -m /mnt/llm
 ```
 
 #### Inference Check
