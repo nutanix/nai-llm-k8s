@@ -21,7 +21,7 @@ from utils.system_utils import (
     create_folder_if_not_exists,
     delete_directory,
     copy_file,
-    get_all_files_in_directory
+    get_all_files_in_directory,
 )
 
 CONFIG_DIR = "config"
@@ -29,7 +29,15 @@ CONFIG_FILE = "config.properties"
 MODEL_STORE_DIR = "model-store"
 MODEL_FILES_LOCATION = "download"
 MODEL_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "model_config.json")
-FILE_EXTENSIONS_TO_IGNORE = [".safetensors", ".safetensors.index.json", ".h5", ".ot", ".tflite", ".msgpack", ".onnx"]
+FILE_EXTENSIONS_TO_IGNORE = [
+    ".safetensors",
+    ".safetensors.index.json",
+    ".h5",
+    ".ot",
+    ".tflite",
+    ".msgpack",
+    ".onnx",
+]
 
 
 def get_ignore_pattern_list(extension_list):
