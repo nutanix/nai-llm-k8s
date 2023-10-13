@@ -1,5 +1,4 @@
 """
-Model Handler
 Serves as a handler for a LLM, allowing it to be used in an inference service.
 The handler provides functions to preprocess input data, make predictions using the model, 
 and post-process the output for a particular use case.
@@ -166,7 +165,7 @@ class LLMHandler(BaseHandler, ABC):
 
         return encoded_input
 
-    def inference(self, data):
+    def inference(self, data, *args, **kwargs):
         """
         This method reads the generation parameters set as environment vairables
         and uses the preprocessed tokens and generation parameters to generate a

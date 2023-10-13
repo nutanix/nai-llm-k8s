@@ -1,5 +1,4 @@
 """
-Marsgen
 Generate a Model Archive (MAR) file for a specified LLM.
 """
 import json

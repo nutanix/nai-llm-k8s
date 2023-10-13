@@ -1,6 +1,5 @@
 """
-TSUtils
-utility functions for running inference and getiing model parameters
+Utility functions for running inference and getiing model parameters
 """
 import os
 import json
@@ -27,11 +26,6 @@ def run_inference_v2(
         debug (bool, optional): Whether to enable debugging output (default is False).
     Returns:
     dict: The response from the inference service, typically containing the inference results.
-
-    Example usage:
-    response = run_inference_v2("falcon_7b", "input_data.json",
-                                protocol="https", host="localhost",
-                                port=8080, timeout=120, debug=True)
     """
     if debug:
         print(f"## Running inference on {model_name} model \n")
@@ -64,9 +58,6 @@ def get_model_params(model_name):
     Returns:
     dict: contains the repo_version, temperature,
           repetition penalty, top_p and max new tokens of the model.
-
-    Example usage:
-    model_params = get_model_params("falcon_7b")
     """
     model_params = collections.defaultdict(str)
 
