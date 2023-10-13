@@ -150,15 +150,20 @@ def set_values(params):
                            class with values set based on the arguments.
     """
     dl_model = DownloadDataModel()
+
     dl_model.model_name = params.model_name
     dl_model.download_model = params.no_download
     dl_model.output = params.output
+
     dl_model.mar_utils.handler_path = params.handler_path
+
     dl_model.repo_info.repo_version = params.repo_version
     dl_model.repo_info.hf_token = params.hf_token
+
     dl_model.debug = params.debug
-    get_repo_id_version_and_handler(dl_model)
+    read_config_for_download(dl_model)
     check_if_path_exists(dl_model.output, "output", is_dir=True)
+
     dl_model.mar_utils.model_path = os.path.join(
         dl_model.output,
         dl_model.model_name,
@@ -252,7 +257,7 @@ def check_if_mar_file_exist(dl_model):
     return False
 
 
-def get_repo_id_version_and_handler(dl_model):
+def read_config_for_download(dl_model):
     """
     This function reads repo id, version and handler name
     from model_config.json and sets values for the DownloadDataModel object.

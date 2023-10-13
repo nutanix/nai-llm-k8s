@@ -25,7 +25,7 @@ def kubernetes(deploy_name):
     kserve = KServeClient(client_configuration=config.load_kube_config())  # noqa: F841
     try:
         kserve.delete(name=deploy_name, namespace="default")
-    except:
+    except Exception:
         print("Deployment pod delete triggered")
 
     core_api = client.CoreV1Api()
@@ -33,12 +33,12 @@ def kubernetes(deploy_name):
         core_api.delete_namespaced_persistent_volume_claim(
             name=deploy_name, namespace="default"
         )
-    except:
+    except Exception:
         print("PVC delete triggered")
 
     try:
         core_api.delete_persistent_volume(name=deploy_name)
-    except:
+    except Exception:
         print("PV delete triggered")
 
 
