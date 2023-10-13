@@ -1,5 +1,4 @@
 """
-Model Handler
 Serves as a handler for a LLM, allowing it to be used in an inference service.
 The handler provides functions to preprocess input data, make predictions using the model, 
 and post-process the output for a particular use case.
@@ -73,11 +72,18 @@ class LLMHandler(BaseHandler, ABC):
         self.request = {
             "request_list": defaultdict(int),
             "request_ids": defaultdict(int),
-            "request_type": defaultdict(int)
+            "request_type": defaultdict(int),
         }
         self.tokenizer = None
+        self.map_location = None
+        self.device = None
+        self.model = None
 
     def initialize(self, context):
+        """
+        This method loads the Hugging Face model and tokenizer based on
+        the provided model name and model files present in MAR file.
+        """
         properties = context.system_properties
         model_dir = properties.get("model_dir")
 
@@ -117,6 +123,13 @@ class LLMHandler(BaseHandler, ABC):
         logger.info("Initialized TorchServe Server!")
 
     def preprocess(self, data):
+        """
+        This method tookenizes input text using the associated tokenizer.
+        Args:
+            text (str): The input text to be tokenized.
+        Returns:
+            Tensor: Tokenized input data
+        """
         input_list = []
 
         for idx, input_data in enumerate(data):
@@ -153,6 +166,15 @@ class LLMHandler(BaseHandler, ABC):
         return encoded_input
 
     def inference(self, data, *args, **kwargs):
+        """
+        This method reads the generation parameters set as environment vairables
+        and uses the preprocessed tokens and generation parameters to generate a
+        output text.
+        Args:
+            data (Tensor): The input Tensor of encoded tokens for which generation is run.
+        Returns:
+            list(str): A list containing model's generated output.
+        """
         logger.info("Running Inference")
         encoding = data
         logger.info("Generating text")
@@ -182,7 +204,14 @@ class LLMHandler(BaseHandler, ABC):
         logger.info("Generated text is: %s", ", ".join(map(str, inference)))
         return inference
 
-    def postprocess(self, data):  #
+    def postprocess(self, data):
+        """
+        This method returns the list of generated text recieved.
+        Args:
+            data (list(str)): A list containing the output text of model generation.
+        Returns:
+            list(str): A list containing model's generated output.
+        """
         response_list = []
         idx = 0
         inference_output = []
