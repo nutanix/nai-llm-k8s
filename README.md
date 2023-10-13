@@ -25,7 +25,7 @@ helm install --wait -n gpu-operator --create-namespace gpu-operator nvidia/gpu-o
 ### Kubeflow serving installation
 
 ```
-curl -s "https://raw.githubusercontent.com/kserve/kserve/v0.11.0/hack/quick_install.sh" | bash
+curl -s "https://raw.githubusercontent.com/kserve/kserve/v0.11.1/hack/quick_install.sh" | bash
 ```
 
 ### Setup
