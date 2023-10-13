@@ -82,9 +82,8 @@ class LLMHandler(BaseHandler, ABC):
 
     def initialize(self, context):
         """
-        initialize():
-            This method loads the Hugging Face model and tokenizer based on
-            the provided model name and model files present in MAR file.
+        This method loads the Hugging Face model and tokenizer based on
+        the provided model name and model files present in MAR file.
         """
         properties = context.system_properties
         model_dir = properties.get("model_dir")
@@ -126,12 +125,11 @@ class LLMHandler(BaseHandler, ABC):
 
     def preprocess(self, data):
         """
-        preprocess(text: str) -> Tensor:
-            This method tookenizes input text using the associated tokenizer.
-            Args:
-                text (str): The input text to be tokenized.
-            Returns:
-                Tensor: Tokenized input data
+        This method tookenizes input text using the associated tokenizer.
+        Args:
+            text (str): The input text to be tokenized.
+        Returns:
+            Tensor: Tokenized input data
         """
         input_list = []
 
@@ -170,14 +168,13 @@ class LLMHandler(BaseHandler, ABC):
 
     def inference(self, data):
         """
-        inference(data: Tensor) -> list(str):
-            This method reads the generation parameters set as environment vairables
-            and uses the preprocessed tokens and generation parameters to generate a
-            output text.
-            Args:
-                data (Tensor): The input Tensor of encoded tokens for which generation is run.
-            Returns:
-                list(str): A list containing model's generated output.
+        This method reads the generation parameters set as environment vairables
+        and uses the preprocessed tokens and generation parameters to generate a
+        output text.
+        Args:
+            data (Tensor): The input Tensor of encoded tokens for which generation is run.
+        Returns:
+            list(str): A list containing model's generated output.
         """
         logger.info("Running Inference")
         encoding = data
@@ -210,12 +207,11 @@ class LLMHandler(BaseHandler, ABC):
 
     def postprocess(self, data):
         """
-        postprocess(data: list(str)) -> list(str):
-            This method returns the list of generated text recieved.
-            Args:
-                data (list(str)): A list containing the output text of model generation.
-            Returns:
-                list(str): A list containing model's generated output.
+        This method returns the list of generated text recieved.
+        Args:
+            data (list(str)): A list containing the output text of model generation.
+        Returns:
+            list(str): A list containing model's generated output.
         """
         response_list = []
         idx = 0

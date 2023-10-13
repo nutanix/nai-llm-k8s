@@ -1,5 +1,4 @@
 """
-System Utils
 Utility functions to handle file and folder operations
 """
 import os
@@ -9,7 +8,6 @@ import shutil
 
 def check_if_path_exists(filepath, err="", is_dir=False):
     """
-    check_if_path_exists
     This function checks if a given path exists.
     Args:
         filepath (str): Path to check.

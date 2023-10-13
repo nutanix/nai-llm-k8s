@@ -1,5 +1,4 @@
 """
-Download
 Downloads model files, generates Model Archive (MAR) 
 and config.properties file
 """
