@@ -9,14 +9,6 @@ from kubernetes import client, config
 from kserve import KServeClient
 
 
-class NotFoundException(Exception):
-    """
-    Custom exception class
-    """
-    def __init__(self, message="Not found"):
-        self.message = message
-        super().__init__(self.message)
-
 def kubernetes(deploy_name):
     """
     This function cleans up various Kubernetes resources,
