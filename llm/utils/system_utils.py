@@ -1,5 +1,4 @@
 """
-System Utils
 Utility functions to handle file and folder operations
 """
 import os
@@ -10,7 +9,6 @@ from pathlib import Path
 
 def check_if_path_exists(filepath, err="", is_dir=False):
     """
-    check_if_path_exists
     This function checks if a given path exists.
     Args:
         filepath (str): Path to check.
@@ -80,7 +78,7 @@ def get_all_files_in_directory(directory):
     This function provides a list of file names in a directory
     and its sub-directories
     Args:
-        directory (str): The path to the directory.
+        path (str): The path to the directory.
     Returns:
         ["file.txt", "sub-directory/file.txt"]
     """

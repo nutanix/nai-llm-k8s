@@ -1,5 +1,4 @@
 """
-Kubeflow Inference Run
 Orchestrates the deployment and inference of a LLM 
 in a Kubernetes cluster by performing tasks such as creating 
 persistent storage, registering the model, and running inference.
@@ -9,7 +8,7 @@ import sys
 import os
 import time
 import utils.tsutils as ts
-from utils.system_utils import check_if_path_exists
+from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 from kubernetes import client, config
 from kserve import (
     KServeClient,
@@ -39,7 +38,10 @@ def get_inputs_from_folder(input_path):
       List[str]: A list of file paths within the input directory.
     """
     return (
-        [os.path.join(input_path, item) for item in os.listdir(input_path)]
+        [
+            os.path.join(input_path, item)
+            for item in get_all_files_in_directory(input_path)
+        ]
         if input_path
         else []
     )

@@ -63,15 +63,15 @@ The available LLMs are mpt_7b, falcon_7b, llama2_7b
 
 ##### Examples
 
-Download MPT-7B model files(13 GB) and generate model archive(9.83 GB) for it:
+Download MPT-7B model files and generate model archive for it:
 ```
 python3 $WORK_DIR/llm/download.py --model_name mpt_7b --output /mnt/llm
 ```
-Download Falcon-7B model files(14 GB) and generate model archive(10.69 GB) for it:
+Download Falcon-7B model files and generate model archive for it:
 ```
 python3 $WORK_DIR/llm/download.py --model_name falcon_7b --output /mnt/llm
 ```
-Download Llama2-7B model files(26 GB) and generate model archive(9.66 GB) for it:
+Download Llama2-7B model files and generate model archive for it:
 ```
 python3 $WORK_DIR/llm/download.py --model_name llama2_7b --output /mnt/llm --hf_token <token_value>
 ```

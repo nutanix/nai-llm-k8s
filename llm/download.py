@@ -1,5 +1,4 @@
 """
-Download
 Downloads model files, generates Model Archive (MAR) 
 and config.properties file
 """
@@ -214,11 +213,12 @@ def set_config(dl_model):
     )  # Check if mar file exists
 
     config_info = [
-    "\ninstall_py_dep_per_model=true\n",
-    "model_store=/mnt/models/model-store\n",
-    f'model_snapshot={{"name":"startup.cfg","modelCount":1,"models":{{"{dl_model.model_name}":{{'
-    f'"1.0":{{"defaultVersion":true,"marName":"{dl_model.model_name}.mar","minWorkers":1,'
-    f'"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}}}}}',
+        "\ninstall_py_dep_per_model=true\n",
+        "model_store=/mnt/models/model-store\n",
+        f'model_snapshot={{"name":"startup.cfg","modelCount":1,'
+        f'"models":{{"{dl_model.model_name}":{{'
+        f'"1.0":{{"defaultVersion":true,"marName":"{dl_model.model_name}.mar","minWorkers":1,'
+        f'"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}}}}}',
     ]
 
     with open(config_file_path, "a", encoding="utf-8") as config_file:
@@ -323,7 +323,10 @@ def read_config_for_download(dl_model):
                 check_if_path_exists(dl_model.mar_utils.handler_path, "Handler")
             except (RepositoryNotFoundError, RevisionNotFoundError, KeyError):
                 print(
-                    "## Error: Please check either repo_id or repo_version is not correct"
+                    (
+                        "## Error: Please check either repo_id, repo_version "
+                        "or huggingface token is not correct"
+                    )
                 )
                 sys.exit(1)
         else:
