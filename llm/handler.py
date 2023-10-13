@@ -70,9 +70,11 @@ class LLMHandler(BaseHandler, ABC):
     def __init__(self):
         super().__init__()
         self.initialized = False
-        self.request_list = defaultdict(int)
-        self.request_ids = defaultdict(int)
-        self.request_type = defaultdict(int)
+        self.request = {
+            "request_list": defaultdict(int),
+            "request_ids": defaultdict(int),
+            "request_type": defaultdict(int)
+        }
         self.tokenizer = None
 
     def initialize(self, context):
@@ -121,14 +123,14 @@ class LLMHandler(BaseHandler, ABC):
             # Pre-process for Kserve v2 format
             if isinstance(input_data, dict):
                 if "inputs" in input_data:
-                    self.request_type[idx] = "kservev2"
-                    self.request_ids[idx] = (
+                    self.request["request_type"][idx] = "kservev2"
+                    self.request["request_ids"][idx] = (
                         input_data.get("id") if input_data.get("id") else ""
                     )
                     # Kserve wrapper validates ID, setting empty if not sent in request
                     # To handle multiple inputs inside a single request use-case
                     for row_data in input_data.get("inputs"):
-                        self.request_list[idx] += 1
+                        self.request["request_list"][idx] += 1
                         input_text = row_data.get("data")[0]
 
                         if isinstance(input_text, (bytes, bytearray)):
@@ -140,7 +142,7 @@ class LLMHandler(BaseHandler, ABC):
                     row_input = input_data.decode("utf-8")
 
                 # Set as raw for non kserve requests
-                self.request_type[idx] = "raw"
+                self.request["request_type"][idx] = "raw"
                 input_list.append(row_input)
 
         logger.info("Received text: %s", ", ".join(map(str, input_list)))
@@ -187,18 +189,18 @@ class LLMHandler(BaseHandler, ABC):
 
         for result in data:
             # For raw request - response
-            if self.request_type[idx] == "raw":
+            if self.request["request_type"][idx] == "raw":
                 response_list.append(result)
                 continue
 
             # For Kserve v2 response
             inference_output.append(result)
-            self.request_list[idx] -= 1
-            if self.request_list[idx]:
+            self.request["request_list"][idx] -= 1
+            if self.request["request_list"][idx]:
                 continue
 
             response = {}
-            response["id"] = self.request_ids[idx]
+            response["id"] = self.request["request_ids"][idx]
             response["model_name"] = self.context.manifest.get("model").get("modelName")
             response["model_version"] = self.context.manifest.get("model").get(
                 "modelVersion"

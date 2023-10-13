@@ -4,10 +4,18 @@ Clean up Kubernetes resources associated with a deployment.
 """
 import argparse
 import sys
-
+import requests
 from kubernetes import client, config
 from kserve import KServeClient
 
+
+class NotFoundException(Exception):
+    """
+    Custom exception class
+    """
+    def __init__(self, message="Not found"):
+        self.message = message
+        super().__init__(self.message)
 
 def kubernetes(deploy_name):
     """
@@ -25,7 +33,7 @@ def kubernetes(deploy_name):
     kserve = KServeClient(client_configuration=config.load_kube_config())  # noqa: F841
     try:
         kserve.delete(name=deploy_name, namespace="default")
-    except Exception:
+    except requests.exceptions.RequestException:
         print("Deployment pod delete triggered")
 
     core_api = client.CoreV1Api()
@@ -33,12 +41,12 @@ def kubernetes(deploy_name):
         core_api.delete_namespaced_persistent_volume_claim(
             name=deploy_name, namespace="default"
         )
-    except Exception:
+    except requests.exceptions.RequestException:
         print("PVC delete triggered")
 
     try:
         core_api.delete_persistent_volume(name=deploy_name)
-    except Exception:
+    except requests.exceptions.RequestException:
         print("PV delete triggered")
 
 
