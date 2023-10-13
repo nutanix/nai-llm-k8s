@@ -1,3 +1,7 @@
+"""
+Cleanup
+Clean up Kubernetes resources associated with a deployment.
+"""
 import argparse
 import sys
 
@@ -6,17 +10,29 @@ from kserve import KServeClient
 
 
 def kubernetes(deploy_name):
+    """
+    This function cleans up various Kubernetes resources,
+    including deleting the deployment, persistent volume claims (PVCs), and
+    persistent volumes (PVs) associated with the specified deployment name.
+    Args:
+        deploy_name (str): The name of the deployment to clean up.
+    Returns:
+        None
+    Raises:
+        Exception: If any error occurs during resource cleanup.
+    """
     print("Clean up triggered for all the deployments under -", deploy_name)
-    kube_config = config.load_kube_config()
-    kserve = KServeClient(client_configuration=kube_config)
+    kserve = KServeClient(client_configuration=config.load_kube_config())  # noqa: F841
     try:
-        kserve.delete(name=deploy_name, namespace='default')
+        kserve.delete(name=deploy_name, namespace="default")
     except:
         print("Deployment pod delete triggered")
 
     core_api = client.CoreV1Api()
     try:
-        core_api.delete_namespaced_persistent_volume_claim(name=deploy_name, namespace='default')
+        core_api.delete_namespaced_persistent_volume_claim(
+            name=deploy_name, namespace="default"
+        )
     except:
         print("PVC delete triggered")
 
@@ -26,12 +42,14 @@ def kubernetes(deploy_name):
         print("PV delete triggered")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Create the argument parser
-    parser = argparse.ArgumentParser(description='Script to cleanup existing deployment.')
+    parser = argparse.ArgumentParser(
+        description="Script to cleanup existing deployment."
+    )
 
     # Add arguments
-    parser.add_argument('--deploy_name', type=str, help='name of the deployment')
+    parser.add_argument("--deploy_name", type=str, help="name of the deployment")
 
     # Parse the command-line arguments
     args = parser.parse_args()
