@@ -69,11 +69,6 @@
         "handler": "handler.py",
         "repo_id": "gpt2",
         "repo_version": "11c5a3d5811f50298f278a704980280950aedb10",
-        "registration_params":{
-            "batch_size" : 1,
-            "max_batch_delay" : 200,
-            "response_timeout" : 2000
-        },
         "gpu_type": ["A100-PCIE-40GB","A100-PCIE-80GB"]
     }
 }

@@ -5,6 +5,7 @@ Utility functions to handle file and folder operations
 import os
 import sys
 import shutil
+from pathlib import Path
 
 
 def check_if_path_exists(filepath, err="", is_dir=False):
@@ -73,23 +74,21 @@ def copy_file(source_file, destination_file):
     except OSError as e:
         print(f"## Error: {e}")
 
-"""
-This function provides a list of file names in a directory
-and its sub-directories
 
-Args:
-    path (str): The path to the directory.
-
-Returns:
-    ["file.txt", "sub-directory/file.txt"]
-"""
-def get_all_files_in_directory(path):
-    output =[]
-    for (dir_path, _, file_names) in os.walk(path):
-        sub_dir = dir_path.removeprefix(path)
-        if sub_dir:
-            output.extend([f"{sub_dir}/{file_name}" for file_name in file_names])
-        else:
-            output.extend(file_names)
-    
+def get_all_files_in_directory(directory):
+    """
+    This function provides a list of file names in a directory
+    and its sub-directories
+    Args:
+        directory (str): The path to the directory.
+    Returns:
+        ["file.txt", "sub-directory/file.txt"]
+    """
+    output = []
+    directory_path = Path(directory)
+    output = [
+        str(file.relative_to(directory_path))
+        for file in directory_path.rglob("*")
+        if file.is_file()
+    ]
     return output
