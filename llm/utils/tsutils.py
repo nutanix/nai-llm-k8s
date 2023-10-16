@@ -69,6 +69,7 @@ def get_model_params(model_name):
         model_config = json.loads(file.read())
         if model_name in model_config:
             model_params["repo_version"] = model_config[model_name]["repo_version"]
+            model_params["repo_id"] = model_config[model_name]["repo_id"]
         else:
             print(
                 "## Please check your model name, it should be one of the following : "
