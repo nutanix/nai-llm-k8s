@@ -4,7 +4,7 @@ wdir=$(dirname "$SCRIPT")
 
 CPU_POD="8"
 MEM_POD="32Gi"
-MODEL_TIMEOUT_IN_SEC="600"
+MODEL_TIMEOUT_IN_SEC="1200"
 
 function helpFunction()
 {
