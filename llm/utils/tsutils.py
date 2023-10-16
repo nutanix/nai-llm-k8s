@@ -75,6 +75,7 @@ def get_model_params(model_name):
             )
             print(list(model_config.keys()))
             sys.exit(1)
+
         if model_name in model_config and "model_params" in model_config[model_name]:
             param_config = model_config[model_name]["model_params"]
             if "temperature" in param_config:
