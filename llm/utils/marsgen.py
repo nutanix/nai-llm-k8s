@@ -4,6 +4,7 @@ Generate a Model Archive (MAR) file for a specified LLM.
 import json
 import os
 import sys
+import subprocess
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 
 
