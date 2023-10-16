@@ -318,6 +318,7 @@ def execute(params):
     mount_path = params.mount_path
     model_timeout = params.model_timeout
 
+    check_if_path_exists(mount_path, "local nfs mount", is_dir=True)
     if not nfs_path or not nfs_server:
         print(
             "NFS server and share path was not provided in accepted format - <address>:<share_path>"

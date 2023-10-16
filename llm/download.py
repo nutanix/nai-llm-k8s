@@ -237,7 +237,7 @@ def check_if_model_files_exist(dl_model):
         bool: True if the downloaded model files match the expected
               repository files, False otherwise.
     """
-    extra_files_list = get_all_files_in_directory(dl_model.model_path)
+    extra_files_list = get_all_files_in_directory(dl_model.mar_utils.model_path)
     hf_api = HfApi()
     repo_files = hf_api.list_repo_files(
         repo_id=dl_model.repo_info.repo_id,
@@ -305,11 +305,12 @@ def read_config_for_download(dl_model):
                     dl_model.repo_info.repo_version = model["repo_version"]
 
                 hf_api = HfApi()
-                hf_api.list_repo_commits(
+                commit_info = hf_api.list_repo_commits(
                     repo_id=dl_model.repo_info.repo_id,
                     revision=dl_model.repo_info.repo_version,
                     token=dl_model.repo_info.hf_token,
                 )
+                dl_model.repo_info.repo_version = commit_info[0].commit_id
 
                 if (
                     dl_model.mar_utils.handler_path == ""
