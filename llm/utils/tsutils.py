@@ -2,6 +2,7 @@
 Utility functions for running inference and getiing model parameters
 """
 import os
+import sys
 import json
 import collections
 import requests
@@ -68,6 +69,13 @@ def get_model_params(model_name):
         model_config = json.loads(file.read())
         if model_name in model_config:
             model_params["repo_version"] = model_config[model_name]["repo_version"]
+        else:
+            print(
+                "## Please check your model name, it should be one of the following : "
+            )
+            print(list(model_config.keys()))
+            sys.exit(1)
+
         if model_name in model_config and "model_params" in model_config[model_name]:
             param_config = model_config[model_name]["model_params"]
             if "temperature" in param_config:

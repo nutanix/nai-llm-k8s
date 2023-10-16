@@ -5,7 +5,7 @@ import json
 import os
 import sys
 import subprocess
-from utils.system_utils import check_if_path_exists
+from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 
 
 def generate_mars(dl_model, model_config, model_store_dir, debug=False):
@@ -46,7 +46,7 @@ def generate_mars(dl_model, model_config, model_store_dir, debug=False):
         model = models[dl_model.model_name]
 
         extra_files = None
-        extra_files_list = os.listdir(dl_model.mar_utils.model_path)
+        extra_files_list = get_all_files_in_directory(dl_model.mar_utils.model_path)
         extra_files_list = [
             os.path.join(dl_model.mar_utils.model_path, file)
             for file in extra_files_list
