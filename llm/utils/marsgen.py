@@ -7,6 +7,7 @@ import sys
 import subprocess
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 
+REQUIREMENTS_FILE = "model_requirements.txt"
 
 def generate_mars(dl_model, model_config, model_store_dir, debug=False):
     """
@@ -37,13 +38,12 @@ def generate_mars(dl_model, model_config, model_store_dir, debug=False):
     with open(model_config, encoding="utf-8") as f:
         models = json.loads(f.read())
         if dl_model.model_name not in models:
-            print(
-                "## Please check your model name, it should be one of the following : "
-            )
-            print(list(models.keys()))
-            sys.exit(1)
-
-        model = models[dl_model.model_name]
+            if not dl_model.is_custom:
+                print(
+                    "## Please check your model name, it should be one of the following : "
+                )
+                print(list(models.keys()))
+                sys.exit(1)
 
         extra_files = None
         extra_files_list = get_all_files_in_directory(dl_model.mar_utils.model_path)
@@ -53,12 +53,10 @@ def generate_mars(dl_model, model_config, model_store_dir, debug=False):
         ]
         extra_files = ",".join(extra_files_list)
 
-        requirements_file = None
-        if model.get("requirements_file") and model["requirements_file"]:
-            requirements_file = os.path.join(
-                os.path.dirname(__file__), model["requirements_file"]
-            )
-            check_if_path_exists(requirements_file)
+        requirements_file = os.path.join(
+            os.path.dirname(__file__), REQUIREMENTS_FILE
+        )
+        check_if_path_exists(requirements_file)
 
         model_archiver_args = {
             "model_name": dl_model.model_name,
@@ -83,7 +81,7 @@ def generate_mars(dl_model, model_config, model_store_dir, debug=False):
         except subprocess.CalledProcessError as exc:
             print("## Creation failed !\n")
             if debug:
-                print(f"## {model['model_name']} creation failed !, error: {exc}\n")
+                print(f"## {dl_model.model_name} creation failed !, error: {exc}\n")
             sys.exit(1)
 
     os.chdir(cwd)

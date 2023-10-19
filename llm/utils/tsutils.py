@@ -70,12 +70,13 @@ def get_model_params(model_name):
         if model_name in model_config:
             model_params["repo_version"] = model_config[model_name]["repo_version"]
             model_params["repo_id"] = model_config[model_name]["repo_id"]
+            model_params["is_custom"] = False
         else:
+            model_params["is_custom"] = True
             print(
-                "## Please check your model name, it should be one of the following : "
+                f"## Using custom MAR file : {model_name}.mar\n\nWARNING: This model has not been validated on any GPUs\n\n"
             )
-            print(list(model_config.keys()))
-            sys.exit(1)
+
         if model_name in model_config and "model_params" in model_config[model_name]:
             param_config = model_config[model_name]["model_params"]
             if "temperature" in param_config:

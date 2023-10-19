@@ -55,8 +55,9 @@ class LLMHandler(BaseHandler, ABC):
                 data (list(str)): A list containing the output text of model generation.
             Returns:
                 list(str): A list containing model's generated output.
-        _batch_to_json(data: list(str)) -> list(str):
-        _to_json(data: (str)) -> json(str):
+        _batch_to_json(data: list(str)) -> list(str): Convertes list of string output
+                                                      in json format
+        _to_json(data: (str)) -> json(str): Convertes string output in json format
         get_env_value(str) -> float:
             This method reads the inputed environment variable and converts it to float
             and returns it. This is used for reading model generation parameters.
@@ -77,6 +78,7 @@ class LLMHandler(BaseHandler, ABC):
         self.tokenizer = None
         self.map_location = None
         self.device = None
+        self.device_map = None
         self.model = None
 
     def initialize(self, context):
@@ -93,16 +95,13 @@ class LLMHandler(BaseHandler, ABC):
             and torch.cuda.is_available()
             and properties.get("gpu_id") is not None
         ):
-            self.map_location = "cuda"
-            self.device = torch.device(
-                self.map_location + ":" + str(properties.get("gpu_id"))
-            )
+            self.device = torch.device("cuda")
+            self.device_map = "auto"
         else:
-            self.map_location = "cpu"
-            self.device = torch.device(self.map_location)
+            self.device = self.device_map = torch.device("cpu")
 
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
-            model_dir, local_files_only=True, device_map=self.device
+            model_dir, local_files_only=True, device_map=self.device_map
         )
         self.tokenizer.pad_token = (
             self.tokenizer.eos_token
@@ -113,7 +112,7 @@ class LLMHandler(BaseHandler, ABC):
         self.model = transformers.AutoModelForCausalLM.from_pretrained(
             model_dir,
             torch_dtype=torch.bfloat16,  # Load model weights in bfloat16
-            device_map=self.device,
+            device_map=self.device_map,
             local_files_only=True,
             trust_remote_code=True,
         )

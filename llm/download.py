@@ -9,12 +9,9 @@ import sys
 import re
 import dataclasses
 from collections import Counter
-from huggingface_hub import snapshot_download, HfApi
-from huggingface_hub.utils import (
-    RepositoryNotFoundError,
-    RevisionNotFoundError,
-)
+from huggingface_hub import snapshot_download
 import utils.marsgen as mg
+import utils.hfutils as hf
 from utils.system_utils import (
     check_if_path_exists,
     create_folder_if_not_exists,
@@ -27,6 +24,7 @@ CONFIG_DIR = "config"
 CONFIG_FILE = "config.properties"
 MODEL_STORE_DIR = "model-store"
 MODEL_FILES_LOCATION = "download"
+HANDLER = "handler.py"
 MODEL_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "model_config.json")
 FILE_EXTENSIONS_TO_IGNORE = [
     ".safetensors",
@@ -145,6 +143,7 @@ class DownloadDataModel:
     output = str()
     mar_utils = MarUtils()
     repo_info = RepoInfo()
+    is_custom = bool()
     debug = bool()
 
 
@@ -162,6 +161,7 @@ def set_values(params):
     dl_model.model_name = params.model_name
     dl_model.download_model = params.no_download
     dl_model.output = params.output
+    dl_model.is_custom = False
 
     dl_model.mar_utils.handler_path = params.handler_path
 
@@ -172,18 +172,8 @@ def set_values(params):
     read_config_for_download(dl_model)
     check_if_path_exists(dl_model.output, "output", is_dir=True)
 
-    dl_model.mar_utils.model_path = os.path.join(
-        dl_model.output,
-        dl_model.model_name,
-        dl_model.repo_info.repo_version,
-        MODEL_FILES_LOCATION,
-    )
-    dl_model.mar_utils.mar_output = os.path.join(
-        dl_model.output,
-        dl_model.model_name,
-        dl_model.repo_info.repo_version,
-        MODEL_STORE_DIR,
-    )
+    get_model_files_and_mar(dl_model, params)
+
     return dl_model
 
 
@@ -196,9 +186,15 @@ def set_config(dl_model):
     Returns:
         None
     """
-    model_spec_path = os.path.join(
-        dl_model.output, dl_model.model_name, dl_model.repo_info.repo_version
-    )
+    if dl_model.is_custom:
+        model_spec_path = os.path.join(
+            dl_model.output, dl_model.model_name
+        )
+    else:
+        model_spec_path = os.path.join(
+            dl_model.output, dl_model.model_name, dl_model.repo_info.repo_version
+        )
+
     config_folder_path = os.path.join(model_spec_path, CONFIG_DIR)
     create_folder_if_not_exists(config_folder_path)
 
@@ -225,6 +221,29 @@ def set_config(dl_model):
         config_file.writelines(config_info)
 
 
+def get_model_files_and_mar(dl_model, params):
+    if dl_model.is_custom:
+        dl_model.mar_utils.model_path = params.model_path
+        dl_model.mar_utils.mar_output = os.path.join(
+            dl_model.output,
+            dl_model.model_name,
+            MODEL_STORE_DIR,
+        )
+    else:
+        dl_model.mar_utils.model_path = os.path.join(
+            dl_model.output,
+            dl_model.model_name,
+            dl_model.repo_info.repo_version,
+            MODEL_FILES_LOCATION,
+        )
+        dl_model.mar_utils.mar_output = os.path.join(
+            dl_model.output,
+            dl_model.model_name,
+            dl_model.repo_info.repo_version,
+            MODEL_STORE_DIR,
+        )
+
+
 def check_if_model_files_exist(dl_model):
     """
     This function compares the list of files in the downloaded model
@@ -238,12 +257,7 @@ def check_if_model_files_exist(dl_model):
               repository files, False otherwise.
     """
     extra_files_list = get_all_files_in_directory(dl_model.mar_utils.model_path)
-    hf_api = HfApi()
-    repo_files = hf_api.list_repo_files(
-        repo_id=dl_model.repo_info.repo_id,
-        revision=dl_model.repo_info.repo_version,
-        token=dl_model.repo_info.hf_token,
-    )
+    repo_files = hf.get_repo_files_list(dl_model)
     repo_files = filter_files_by_extension(repo_files, FILE_EXTENSIONS_TO_IGNORE)
     return compare_lists(extra_files_list, repo_files)
 
@@ -276,60 +290,47 @@ def read_config_for_download(dl_model):
     Returns:
         None
     Raises:
-        sys.exit(1): If model name,repo_id or repo_version is not valid, the
-                     function will terminate the program with an exit code of 1.
+        sys.exit(1): If model name is not valid, the function will
+                     terminate the program with an exit code of 1.
     """
     check_if_path_exists(MODEL_CONFIG_PATH)
     with open(MODEL_CONFIG_PATH, encoding="utf-8") as f:
         models = json.loads(f.read())
         if dl_model.model_name in models:
-            try:
-                # validation to check if model repo commit id is valid or not
-                model = models[dl_model.model_name]
-                dl_model.repo_info.repo_id = model["repo_id"]
-                if (
-                    dl_model.repo_info.repo_id.startswith("meta-llama")
-                    and dl_model.repo_info.hf_token is None
-                ):
-                    # Make sure there is HF hub token for LLAMA(2)
-                    print(
-                        (
-                            "HuggingFace Hub token is required for llama download. "
-                            "Please specify it using --hf_token=<your token>. Refer "
-                            "https://huggingface.co/docs/hub/security-tokens"
-                        )
-                    )
-                    sys.exit(1)
+            # validation to check if model repo commit id is valid or not
+            model = models[dl_model.model_name]
+            dl_model.repo_info.repo_id = model["repo_id"]
 
-                if dl_model.repo_info.repo_version == "":
-                    dl_model.repo_info.repo_version = model["repo_version"]
+            hf.hf_token_check(dl_model.repo_info.repo_id, dl_model.repo_info.hf_token)
 
-                hf_api = HfApi()
-                commit_info = hf_api.list_repo_commits(
-                    repo_id=dl_model.repo_info.repo_id,
-                    revision=dl_model.repo_info.repo_version,
-                    token=dl_model.repo_info.hf_token,
+            if dl_model.repo_info.repo_version == "":
+                dl_model.repo_info.repo_version = model["repo_version"]
+
+            dl_model.repo_info.repo_version = hf.get_repo_commit_id(
+                repo_id=dl_model.repo_info.repo_id,
+                revision=dl_model.repo_info.repo_version,
+                token=dl_model.repo_info.hf_token,
+            )
+
+            if (
+                dl_model.mar_utils.handler_path == ""
+                and model.get("handler")
+                and model["handler"]
+            ):
+                dl_model.mar_utils.handler_path = os.path.join(
+                    os.path.dirname(__file__),
+                    model["handler"],
                 )
-                dl_model.repo_info.repo_version = commit_info[0].commit_id
-
-                if (
-                    dl_model.mar_utils.handler_path == ""
-                    and model.get("handler")
-                    and model["handler"]
-                ):
-                    dl_model.mar_utils.handler_path = os.path.join(
-                        os.path.dirname(__file__),
-                        model["handler"],
-                    )
-                check_if_path_exists(dl_model.mar_utils.handler_path, "Handler")
-            except (RepositoryNotFoundError, RevisionNotFoundError, KeyError):
-                print(
-                    (
-                        "## Error: Please check either repo_id, repo_version "
-                        "or huggingface token is not correct"
-                    )
+            check_if_path_exists(dl_model.mar_utils.handler_path, "Handler")
+        elif not dl_model.download_model:
+            dl_model.is_custom = True
+            if (dl_model.mar_utils.handler_path == ""):
+                dl_model.mar_utils.handler_path = os.path.join(
+                    os.path.dirname(__file__),
+                    HANDLER,
                 )
-                sys.exit(1)
+            if dl_model.repo_info.repo_version == "":
+                dl_model.repo_info.repo_version = "1.0"
         else:
             print(
                 "## Please check your model name, it should be one of the following : "
@@ -387,10 +388,13 @@ def create_mar(dl_model):
         print("## Skipping generation of model archive file as it is present\n")
     else:
         check_if_path_exists(dl_model.mar_utils.model_path, "model_path", is_dir=True)
-        if not check_if_model_files_exist(dl_model):
-            # checking if local model files are same the repository files
-            print("## Model files do not match HuggingFace repository Files")
-            sys.exit(1)
+        if not dl_model.is_custom:
+            if not check_if_model_files_exist(dl_model):
+                # checking if local model files are same the repository files
+                print("## Model files do not match HuggingFace repository Files")
+                sys.exit(1)
+        else:
+            print(f"\n## Generating MAR file for custom model files: {dl_model.model_name}")
 
         create_folder_if_not_exists(dl_model.mar_utils.mar_output)
 
@@ -433,6 +437,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--no_download", action="store_false", help="flag to not download"
+    )
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        default="",
+        metavar="mf",
+        help="absolute path of the model files",
     )
     parser.add_argument(
         "--output",

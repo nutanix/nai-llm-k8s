@@ -8,6 +8,7 @@ import sys
 import os
 import time
 import utils.tsutils as ts
+import utils.hfutils as hf
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 from kubernetes import client, config
 from kserve import (
@@ -18,11 +19,6 @@ from kserve import (
     V1beta1InferenceServiceSpec,
     V1beta1InferenceService,
 )
-from huggingface_hub.utils import (
-    RepositoryNotFoundError,
-    RevisionNotFoundError,
-)
-from huggingface_hub import HfApi
 
 CONFIG_DIR = "config"
 CONFIG_FILE = "config.properties"
@@ -67,35 +63,12 @@ def check_if_valid_version(model_info, mount_path):
         sys.exit(1): If the model files do not exist, the
                      function will terminate the program with an exit code of 1.
     """
-    hf_api = HfApi()
-    if (
-        model_info["repo_id"].startswith("meta-llama")
-        and model_info["hf_token"] is None
-    ):
-        # Make sure there is HF hub token for LLAMA(2)
-        print(
-            (
-                "HuggingFace Hub token is required for llama download. "
-                "Please specify it using --hf_token=<your token>. Refer "
-                "https://huggingface.co/docs/hub/security-tokens"
-            )
-        )
-        sys.exit(1)
-    try:
-        commit_info = hf_api.list_repo_commits(
-            repo_id=model_info["repo_id"],
-            revision=model_info["repo_version"],
-            token=model_info["hf_token"],
-        )
-        model_info["repo_version"] = commit_info[0].commit_id
-    except (RepositoryNotFoundError, RevisionNotFoundError, KeyError):
-        print(
-            (
-                "## Error: Please check either repo_id, repo_version "
-                "or huggingface token is not correct"
-            )
-        )
-        sys.exit(1)
+    hf.hf_token_check(model_info["repo_id"], model_info["hf_token"])
+    model_info["repo_version"] = hf.get_repo_commit_id(
+        repo_id=model_info["repo_id"],
+        revision=model_info["repo_version"],
+        token=model_info["hf_token"],
+    )
     print(model_info)
     model_spec_path = os.path.join(
         mount_path, model_info["model_name"], model_info["repo_version"]
@@ -180,9 +153,14 @@ def create_isvc(deploy_name, model_info, deployment_resources, model_params):
                                    for the inference service.
       model_params(dict): Dictionary containing parameters of the model
     """
-    storageuri = (
-        f"pvc://{deploy_name}/{model_info['model_name']}/{model_info['repo_version']}"
-    )
+    if model_params["is_custom"]:
+        storageuri = (
+            f"pvc://{deploy_name}/{model_info['model_name']}"
+        )
+    else:
+        storageuri = (
+            f"pvc://{deploy_name}/{model_info['model_name']}/{model_info['repo_version']}"
+        )
     default_model_spec = V1beta1InferenceServiceSpec(
         predictor=V1beta1PredictorSpec(
             pytorch=V1beta1TorchServeSpec(
@@ -376,11 +354,12 @@ def execute(params):
     storage = "100Gi"
 
     model_params = ts.get_model_params(model_info["model_name"])
-    if not model_info["repo_version"]:
-        model_info["repo_version"] = model_params["repo_version"]
-    model_info["repo_id"] = model_params["repo_id"]
 
-    model_info["repo_version"] = check_if_valid_version(model_info, mount_path)
+    if not model_params["is_custom"]:
+        if not model_info["repo_version"]:
+            model_info["repo_version"] = model_params["repo_version"]
+        model_info["repo_id"] = model_params["repo_id"]
+        model_info["repo_version"] = check_if_valid_version(model_info, mount_path)
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
