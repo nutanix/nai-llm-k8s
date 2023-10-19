@@ -154,13 +154,9 @@ def create_isvc(deploy_name, model_info, deployment_resources, model_params):
       model_params(dict): Dictionary containing parameters of the model
     """
     if model_params["is_custom"]:
-        storageuri = (
-            f"pvc://{deploy_name}/{model_info['model_name']}"
-        )
+        storageuri = f"pvc://{deploy_name}/{model_info['model_name']}"
     else:
-        storageuri = (
-            f"pvc://{deploy_name}/{model_info['model_name']}/{model_info['repo_version']}"
-        )
+        storageuri = f"pvc://{deploy_name}/{model_info['model_name']}/{model_info['repo_version']}"
     default_model_spec = V1beta1InferenceServiceSpec(
         predictor=V1beta1PredictorSpec(
             pytorch=V1beta1TorchServeSpec(

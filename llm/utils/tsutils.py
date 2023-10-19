@@ -2,7 +2,6 @@
 Utility functions for running inference and getiing model parameters
 """
 import os
-import sys
 import json
 import collections
 import requests
@@ -74,7 +73,8 @@ def get_model_params(model_name):
         else:
             model_params["is_custom"] = True
             print(
-                f"## Using custom MAR file : {model_name}.mar\n\nWARNING: This model has not been validated on any GPUs\n\n"
+                f"## Using custom MAR file : {model_name}.mar\n\n"
+                "WARNING: This model has not been validated on any GPUs\n\n"
             )
 
         if model_name in model_config and "model_params" in model_config[model_name]:
