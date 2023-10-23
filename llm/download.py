@@ -10,7 +10,7 @@ import re
 from collections import Counter
 from huggingface_hub import snapshot_download
 import utils.marsgen as mg
-import utils.hfutils as hf
+import utils.hf_utils as hf
 from utils.generate_data_model import GenerateDataModel
 from utils.system_utils import (
     check_if_path_exists,
@@ -18,6 +18,7 @@ from utils.system_utils import (
     delete_directory,
     copy_file,
     get_all_files_in_directory,
+    check_if_folder_empty,
 )
 
 CONFIG_DIR = "config"
@@ -108,7 +109,7 @@ def set_values(params):
     read_config_for_download(gen_model)
     check_if_path_exists(gen_model.output, "output", is_dir=True)
 
-    get_model_files_and_mar(gen_model, params)
+    set_model_files_and_mar(gen_model, params)
 
     return gen_model
 
@@ -155,7 +156,7 @@ def set_config(gen_model: GenerateDataModel):
         config_file.writelines(config_info)
 
 
-def get_model_files_and_mar(gen_model: GenerateDataModel, params):
+def set_model_files_and_mar(gen_model: GenerateDataModel, params):
     """
     This function sets model path and mar output values.
     Args:
@@ -279,6 +280,9 @@ def read_config_for_download(gen_model: GenerateDataModel):
                 "## Please check your model name, it should be one of the following : "
             )
             print(list(models.keys()))
+            print(
+                "If it is a custom model and you have model files include no_download flag : "
+            )
             sys.exit(1)
 
 
@@ -337,9 +341,16 @@ def create_mar(gen_model: GenerateDataModel):
                 print("## Model files do not match HuggingFace repository Files")
                 sys.exit(1)
         else:
-            print(
-                f"\n## Generating MAR file for custom model files: {gen_model.model_name}"
-            )
+            if check_if_folder_empty(gen_model.mar_utils.model_path):
+                print(
+                    f"\n##Error: {gen_model.model_name} model files not found"
+                    f" in the provided path: {gen_model.mar_utils.model_path}"
+                )
+                sys.exit(1)
+            else:
+                print(
+                    f"\n## Generating MAR file for custom model files: {gen_model.model_name}"
+                )
 
         create_folder_if_not_exists(gen_model.mar_utils.mar_output)
 

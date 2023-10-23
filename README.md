@@ -145,8 +145,8 @@ curl -v -H "Host: ${SERVICE_HOSTNAME}" -H "Content-Type: application/json" http:
 
 If keep alive flag was set in the bash script, then you can run the following command to stop the server and clean up temporary files
 
-python3 $WORK_DIR/llm/utils/cleanup.py --deploy_name <DEPLOYMENT_NAME>
+python3 $WORK_DIR/llm/cleanup.py --deploy_name <DEPLOYMENT_NAME>
 
 ```
-python3 $WORK_DIR/llm/utils/cleanup.py --deploy_name llm-deploy
+python3 $WORK_DIR/llm/cleanup.py --deploy_name llm-deploy
 ```

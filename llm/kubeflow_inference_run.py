@@ -8,7 +8,7 @@ import sys
 import os
 import time
 import utils.tsutils as ts
-import utils.hfutils as hf
+import utils.hf_utils as hf
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 from kubernetes import client, config
 from kserve import (
