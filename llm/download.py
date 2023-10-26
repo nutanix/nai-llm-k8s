@@ -160,7 +160,7 @@ def set_config(gen_model: GenerateDataModel):
         f'"minWorkers":{initial_workers or 1},'
         f'"maxWorkers":{initial_workers or 1},'
         f'"batchSize":{batch_size or 1},"maxBatchDelay":{max_batch_delay or 500},'
-        f'"responseTimeout":{response_timeout or 60}}}}}}}}}',
+        f'"responseTimeout":{response_timeout or 2000}}}}}}}}}',
     ]
 
     with open(config_file_path, "a", encoding="utf-8") as config_file:
