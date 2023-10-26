@@ -273,7 +273,7 @@ def execute_inference_on_inputs(
 
 def health_check(model_name, deploy_name, model_timeout):
     """
-    This function checks if the model is resistered or not.
+    This function checks if the model is registered or not.
 
     Args:
       model_name (str): The name of the model that is being registered.

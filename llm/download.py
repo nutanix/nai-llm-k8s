@@ -11,6 +11,7 @@ from collections import Counter
 from huggingface_hub import snapshot_download
 import utils.marsgen as mg
 import utils.hf_utils as hf
+import utils.tsutils as ts
 from utils.generate_data_model import GenerateDataModel
 from utils.system_utils import (
     check_if_path_exists,
@@ -143,13 +144,23 @@ def set_config(gen_model: GenerateDataModel):
         os.path.join(model_spec_path, MODEL_STORE_DIR, mar_filename), "Model store"
     )  # Check if mar file exists
 
+    (
+        initial_workers,
+        batch_size,
+        max_batch_delay,
+        response_timeout,
+    ) = ts.get_params_for_registration(gen_model.model_name)
+
     config_info = [
         "\ninstall_py_dep_per_model=true\n",
         "model_store=/mnt/models/model-store\n",
         f'model_snapshot={{"name":"startup.cfg","modelCount":1,'
         f'"models":{{"{gen_model.model_name}":{{'
-        f'"1.0":{{"defaultVersion":true,"marName":"{gen_model.model_name}.mar","minWorkers":1,'
-        f'"maxWorkers":1,"batchSize":1,"maxBatchDelay":500,"responseTimeout":60}}}}}}}}',
+        f'"1.0":{{"defaultVersion":true,"marName":"{gen_model.model_name}.mar",'
+        f'"minWorkers":{initial_workers or 1},'
+        f'"maxWorkers":{initial_workers or 1},'
+        f'"batchSize":{batch_size or 1},"maxBatchDelay":{max_batch_delay or 500},'
+        f'"responseTimeout":{response_timeout or 60}}}}}}}}}',
     ]
 
     with open(config_file_path, "a", encoding="utf-8") as config_file:
