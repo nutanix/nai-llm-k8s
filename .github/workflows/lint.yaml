@@ -26,6 +26,12 @@ jobs:
 
       - name: Install Python dependencies
         run: pip install black pylint torchserve==0.8.2 torch==2.0.1 transformers==4.33.0 -r llm/requirements.txt
+
+      - name: Install pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+        working-directory: ./llm
         
       - name: Run linters
         uses: wearerequired/lint-action@v2
