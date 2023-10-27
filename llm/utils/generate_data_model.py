@@ -112,7 +112,6 @@ class GenerateDataModel:
         Returns:
             None
         """
-        print(self.is_custom)
         if self.is_custom:
             self.mar_utils.model_path = params.model_path
             self.mar_utils.mar_output = os.path.join(
