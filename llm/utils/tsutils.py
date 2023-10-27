@@ -2,7 +2,6 @@
 Utility functions for running inference and getiing model parameters
 """
 import os
-import sys
 import json
 import collections
 import requests
@@ -69,12 +68,14 @@ def get_model_params(model_name):
         model_config = json.loads(file.read())
         if model_name in model_config:
             model_params["repo_version"] = model_config[model_name]["repo_version"]
+            model_params["repo_id"] = model_config[model_name]["repo_id"]
+            model_params["is_custom"] = False
         else:
+            model_params["is_custom"] = True
             print(
-                "## Please check your model name, it should be one of the following : "
+                f"## Using custom MAR file : {model_name}.mar\n\n"
+                "WARNING: This model has not been validated on any GPUs\n\n"
             )
-            print(list(model_config.keys()))
-            sys.exit(1)
 
         if model_name in model_config and "model_params" in model_config[model_name]:
             param_config = model_config[model_name]["model_params"]
@@ -91,3 +92,32 @@ def get_model_params(model_name):
                 model_params["max_new_tokens"] = param_config["max_new_tokens"]
 
     return model_params
+
+
+def get_params_for_registration(model_name):
+    """
+    This function reads registration parameters from model_config.json returns them.
+    The generation parameters are :
+    initial_workers, batch_size, max_batch_delay, response_timeout.
+    Args:
+        model_name (str): Name of the model.
+    Returns:
+        str: initial_workers, batch_size, max_batch_delay, response_timeout
+    """
+    dirpath = os.path.dirname(__file__)
+    initial_workers = batch_size = max_batch_delay = response_timeout = None
+    with open(
+        os.path.join(dirpath, "../model_config.json"), encoding="UTF-8"
+    ) as config:
+        model_config = json.loads(config.read())
+        if model_name in model_config and "registration_params" in model_config[model_name]:
+            param_config = model_config[model_name]["registration_params"]
+            if "initial_workers" in param_config:
+                initial_workers = param_config["initial_workers"]
+            if "batch_size" in param_config:
+                batch_size = param_config["batch_size"]
+            if "max_batch_delay" in param_config:
+                max_batch_delay = param_config["max_batch_delay"]
+            if "response_timeout" in param_config:
+                response_timeout = param_config["response_timeout"]
+    return initial_workers, batch_size, max_batch_delay, response_timeout

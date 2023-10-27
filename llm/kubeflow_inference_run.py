@@ -8,6 +8,7 @@ import sys
 import os
 import time
 import utils.tsutils as ts
+import utils.hf_utils as hf
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 from kubernetes import client, config
 from kserve import (
@@ -47,24 +48,38 @@ def get_inputs_from_folder(input_path):
     )
 
 
-def check_if_valid_version(model_name, repo_version, mount_path):
+def check_if_valid_version(model_info, mount_path):
     """
     Check if the model files for a specific commit ID exist in the given directory.
 
     Args:
-      model_name (str): The name of the model.
-      repo_version (str): The commit ID of HuggingFace repo of the model.
+      model_info(dict): A dictionary containing the following:
+        model_name (str): The name of the model.
+        repo_version (str): The commit ID of HuggingFace repo of the model.
+        repo_id (str): The repo id.
+        hf_token (str): Your HuggingFace token (Required only for LLAMA2 model).
       mount_path (str): The local file server mount path where the model files are expected.
     Raises:
         sys.exit(1): If the model files do not exist, the
                      function will terminate the program with an exit code of 1.
     """
-    model_spec_path = os.path.join(mount_path, model_name, repo_version)
+    hf.hf_token_check(model_info["repo_id"], model_info["hf_token"])
+    model_info["repo_version"] = hf.get_repo_commit_id(
+        repo_id=model_info["repo_id"],
+        revision=model_info["repo_version"],
+        token=model_info["hf_token"],
+    )
+    print(model_info)
+    model_spec_path = os.path.join(
+        mount_path, model_info["model_name"], model_info["repo_version"]
+    )
     if not os.path.exists(model_spec_path):
         print(
-            f"## ERROR: The {model_name} model files for given commit ID are not downloaded"
+            f"## ERROR: The {model_info['model_name']} model files for given commit ID "
+            "are not downloaded"
         )
         sys.exit(1)
+    return model_info["repo_version"]
 
 
 def create_pv(core_api, deploy_name, storage, nfs_server, nfs_path):
@@ -121,9 +136,7 @@ def create_pvc(core_api, deploy_name, storage):
     )
 
 
-def create_isvc(
-    deploy_name, model_name, repo_version, deployment_resources, model_params
-):
+def create_isvc(deploy_name, model_info, deployment_resources, model_params):
     """
     This function creates a inference service a PyTorch Predictor that expose LLMs
     as RESTful APIs, allowing to make predictions using the deployed LLMs.
@@ -132,14 +145,18 @@ def create_isvc(
 
     Args:
       deploy_name (str): Name of the inference service.
-      model_name (str): The name of the model whose inference service is to be created.
-      repo_version (str): The commit ID of HuggingFace repo of the model.
+      model_info(dict): A dictionary containing the following:
+        model_name (str): The name of the model whose inference service is to be created.
+        repo_version (str): The commit ID of HuggingFace repo of the model.
       deployment_resources (dict): Dictionary containing number of cpus,
                                    memory and number of gpus to be used
                                    for the inference service.
       model_params(dict): Dictionary containing parameters of the model
     """
-    storageuri = f"pvc://{deploy_name}/{model_name}/{repo_version}"
+    if model_params["is_custom"]:
+        storageuri = f"pvc://{deploy_name}/{model_info['model_name']}"
+    else:
+        storageuri = f"pvc://{deploy_name}/{model_info['model_name']}/{model_info['repo_version']}"
     default_model_spec = V1beta1InferenceServiceSpec(
         predictor=V1beta1PredictorSpec(
             pytorch=V1beta1TorchServeSpec(
@@ -256,7 +273,7 @@ def execute_inference_on_inputs(
 
 def health_check(model_name, deploy_name, model_timeout):
     """
-    This function checks if the model is resistered or not.
+    This function checks if the model is registered or not.
 
     Args:
       model_name (str): The name of the model that is being registered.
@@ -310,11 +327,16 @@ def execute(params):
     deployment_resources["gpus"] = params.gpu
     deployment_resources["cpus"] = params.cpu
     deployment_resources["memory"] = params.mem
+
     nfs_server, nfs_path = params.nfs.split(":")
     deploy_name = params.deploy_name
-    model_name = params.model_name
+
+    model_info = {}
+    model_info["model_name"] = params.model_name
+    model_info["repo_version"] = params.repo_version
+    model_info["hf_token"] = params.hf_token
+
     input_path = params.data
-    repo_version = params.repo_version
     mount_path = params.mount_path
     model_timeout = params.model_timeout
 
@@ -327,28 +349,30 @@ def execute(params):
 
     storage = "100Gi"
 
-    model_params = ts.get_model_params(model_name)
-    if not repo_version:
-        repo_version = model_params["repo_version"]
+    model_params = ts.get_model_params(model_info["model_name"])
 
-    check_if_valid_version(model_name, repo_version, mount_path)
+    if not model_params["is_custom"]:
+        if not model_info["repo_version"]:
+            model_info["repo_version"] = model_params["repo_version"]
+        model_info["repo_id"] = model_params["repo_id"]
+        model_info["repo_version"] = check_if_valid_version(model_info, mount_path)
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
 
     create_pv(core_api, deploy_name, storage, nfs_server, nfs_path)
     create_pvc(core_api, deploy_name, storage)
-    create_isvc(
-        deploy_name, model_name, repo_version, deployment_resources, model_params
-    )
+    create_isvc(deploy_name, model_info, deployment_resources, model_params)
 
     print("wait for model registration to complete, will take some time")
-    health_check(model_name, deploy_name, model_timeout)
+    health_check(model_info["model_name"], deploy_name, model_timeout)
 
     if input_path:
         check_if_path_exists(input_path, "Input", is_dir=True)
         model_inputs = get_inputs_from_folder(input_path)
-        execute_inference_on_inputs(model_inputs, model_name, deploy_name, debug=True)
+        execute_inference_on_inputs(
+            model_inputs, model_info["model_name"], deploy_name, debug=True
+        )
 
 
 if __name__ == "__main__":
@@ -378,6 +402,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--mount_path", type=str, help="local path to the nfs mount location"
+    )
+    parser.add_argument(
+        "--hf_token",
+        type=str,
+        default=None,
+        help="HuggingFace Hub token to download LLAMA(2) models",
     )
     # Parse the command-line arguments
     args = parser.parse_args()

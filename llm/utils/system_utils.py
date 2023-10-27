@@ -90,3 +90,15 @@ def get_all_files_in_directory(directory):
         if file.is_file()
     ]
     return output
+
+
+def check_if_folder_empty(path):
+    """
+    This function checks if a directory is empty.
+    Args:
+        path (str): Path of the dirctory to check.
+    Returns:
+        bool: True if directory is empty, False otherwise.
+    """
+    dir_items = os.listdir(path)
+    return len(dir_items) == 0
