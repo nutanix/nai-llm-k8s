@@ -162,7 +162,7 @@ To generate the MAR file, run the following:
 python3 download.py --no_download [--repo_version <REPO_COMMIT_ID> --handler <CUSTOM_HANDLER_PATH>] --model_name <MODEL_NAME> --model_path <MODEL_PATH> --output <NFS_LOCAL_MOUNT_LOCATION>
 ```
 - no_download:      Set flag to skip downloading the model files, must be set for custom models
-- model_name:       Name of custom model
+- model_name:       Name of custom model, this name must not be in model_config
 - repo_version:     Any model version, defaults to "1.0" (optional)
 - model_path:       Absolute path of custom model files (should be non empty)
 - output:           Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
@@ -173,7 +173,7 @@ Run the following command for starting Kubeflow serving and running inference on
 ```
 bash run.sh -n <CUSTOM_MODEL_NAME> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -d <INPUT_PATH>]
 ```
-- n:    Name of model
+- n:    Name of custom model, this name must not be in model_config
 - d:    Absolute path of input data folder (Optional)
 - g:    Number of gpus to be used to execute (Set 0 to use cpu)
 - f:    NFS server address with share path information
