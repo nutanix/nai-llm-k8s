@@ -164,7 +164,7 @@ python3 download.py --no_download [--repo_version <REPO_COMMIT_ID> --handler <CU
 - no_download:      Set flag to skip downloading the model files, must be set for custom models
 - model_name:       Name of custom model
 - repo_version:     Any model version, defaults to "1.0" (optional)
-- model_path:       Absolute path of custom model files (should be empty non empty)
+- model_path:       Absolute path of custom model files (should be non empty)
 - output:           Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
 - handler:          Path to custom handler, defaults to llm/handler.py (optional)<br />
 
