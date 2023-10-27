@@ -1,7 +1,13 @@
 """
-This module stores the dataclasses GenerateDataModel, MarUtils, RepoInfo.
+This module stores the dataclasses GenerateDataModel, MarUtils, RepoInfo,
+function set_values that sets the GenerateDataModel attributes and
+function set_model_files_and_mar that sets model path and mar output values.
 """
+import os
 import dataclasses
+
+MODEL_STORE_DIR = "model-store"
+MODEL_FILES_LOCATION = "download"
 
 
 @dataclasses.dataclass
@@ -36,7 +42,6 @@ class RepoInfo:
     hf_token = str()
 
 
-@dataclasses.dataclass
 class GenerateDataModel:
     """
     A class representing a model download configuration for data retrieval.
@@ -66,3 +71,65 @@ class GenerateDataModel:
     repo_info = RepoInfo()
     is_custom = bool()
     debug = bool()
+
+    def __init__(self, params):
+        """
+        This is the init function that calls set_values method.
+
+        Args:
+            params: An argparse.Namespace object containing command-line arguments.
+        """
+        self.set_values(params)
+
+    def set_values(self, params):
+        """
+        Set values for the GenerateDataModel object based on the command-line arguments.
+        Args:
+            params: An argparse.Namespace object containing command-line arguments.
+        Returns:
+            GenerateDataModel: An instance of the GenerateDataModel
+                            class with values set based on the arguments.
+        """
+        self.model_name = params.model_name
+        self.download_model = params.no_download
+        self.output = params.output
+        self.is_custom = False
+
+        self.mar_utils.handler_path = params.handler_path
+
+        self.repo_info.repo_version = params.repo_version
+        self.repo_info.hf_token = params.hf_token
+
+        self.debug = params.debug
+
+    def set_model_files_and_mar(self, params):
+        """
+        This function sets model path and mar output values.
+        Args:
+            gen_model (GenerateDataModel): An instance of the GenerateDataModel
+                                        class with relevant information.
+            params: An argparse.Namespace object containing command-line arguments.
+        Returns:
+            None
+        """
+        print(self.is_custom)
+        if self.is_custom:
+            self.mar_utils.model_path = params.model_path
+            self.mar_utils.mar_output = os.path.join(
+                self.output,
+                self.model_name,
+                MODEL_STORE_DIR,
+            )
+        else:
+            self.mar_utils.model_path = os.path.join(
+                self.output,
+                self.model_name,
+                self.repo_info.repo_version,
+                MODEL_FILES_LOCATION,
+            )
+            self.mar_utils.mar_output = os.path.join(
+                self.output,
+                self.model_name,
+                self.repo_info.repo_version,
+                MODEL_STORE_DIR,
+            )

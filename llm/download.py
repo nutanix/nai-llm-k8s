@@ -25,7 +25,6 @@ from utils.system_utils import (
 CONFIG_DIR = "config"
 CONFIG_FILE = "config.properties"
 MODEL_STORE_DIR = "model-store"
-MODEL_FILES_LOCATION = "download"
 HANDLER = "handler.py"
 MODEL_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "model_config.json")
 FILE_EXTENSIONS_TO_IGNORE = [
@@ -85,36 +84,6 @@ def filter_files_by_extension(filenames, extensions_to_remove):
     return filtered_filenames
 
 
-def set_values(params):
-    """
-    Set values for the GenerateDataModel object based on the command-line arguments.
-    Args:
-        params: An argparse.Namespace object containing command-line arguments.
-    Returns:
-        GenerateDataModel: An instance of the GenerateDataModel
-                           class with values set based on the arguments.
-    """
-    gen_model = GenerateDataModel()
-
-    gen_model.model_name = params.model_name
-    gen_model.download_model = params.no_download
-    gen_model.output = params.output
-    gen_model.is_custom = False
-
-    gen_model.mar_utils.handler_path = params.handler_path
-
-    gen_model.repo_info.repo_version = params.repo_version
-    gen_model.repo_info.hf_token = params.hf_token
-
-    gen_model.debug = params.debug
-    read_config_for_download(gen_model)
-    check_if_path_exists(gen_model.output, "output", is_dir=True)
-
-    set_model_files_and_mar(gen_model, params)
-
-    return gen_model
-
-
 def set_config(gen_model: GenerateDataModel):
     """
     This function creates a configuration file for the downloaded model and sets certain parameters.
@@ -166,38 +135,6 @@ def set_config(gen_model: GenerateDataModel):
 
     with open(config_file_path, "a", encoding="utf-8") as config_file:
         config_file.writelines(config_info)
-
-
-def set_model_files_and_mar(gen_model: GenerateDataModel, params):
-    """
-    This function sets model path and mar output values.
-    Args:
-        gen_model (GenerateDataModel): An instance of the GenerateDataModel
-                                      class with relevant information.
-         params: An argparse.Namespace object containing command-line arguments.
-    Returns:
-        None
-    """
-    if gen_model.is_custom:
-        gen_model.mar_utils.model_path = params.model_path
-        gen_model.mar_utils.mar_output = os.path.join(
-            gen_model.output,
-            gen_model.model_name,
-            MODEL_STORE_DIR,
-        )
-    else:
-        gen_model.mar_utils.model_path = os.path.join(
-            gen_model.output,
-            gen_model.model_name,
-            gen_model.repo_info.repo_version,
-            MODEL_FILES_LOCATION,
-        )
-        gen_model.mar_utils.mar_output = os.path.join(
-            gen_model.output,
-            gen_model.model_name,
-            gen_model.repo_info.repo_version,
-            MODEL_STORE_DIR,
-        )
 
 
 def check_if_model_files_exist(gen_model: GenerateDataModel):
@@ -385,7 +322,11 @@ def run_script(params):
     Returns:
         None
     """
-    gen_model = set_values(params)
+    gen_model = GenerateDataModel(params)
+    read_config_for_download(gen_model)
+    check_if_path_exists(gen_model.output, "output", is_dir=True)
+    gen_model.set_model_files_and_mar(params)
+
     if gen_model.download_model:
         gen_model = run_download(gen_model)
 
