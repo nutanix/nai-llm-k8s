@@ -156,7 +156,8 @@ def set_config(gen_model: GenerateDataModel):
         "model_store=/mnt/models/model-store\n",
         f'model_snapshot={{"name":"startup.cfg","modelCount":1,'
         f'"models":{{"{gen_model.model_name}":{{'
-        f'"1.0":{{"defaultVersion":true,"marName":"{gen_model.model_name}.mar",'
+        f'"{gen_model.repo_info.repo_version}":{{"defaultVersion":true,'
+        f'"marName":"{gen_model.model_name}.mar",'
         f'"minWorkers":{initial_workers or 1},'
         f'"maxWorkers":{initial_workers or 1},'
         f'"batchSize":{batch_size or 1},"maxBatchDelay":{max_batch_delay or 500},'
