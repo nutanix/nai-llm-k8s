@@ -110,7 +110,7 @@ def get_params_for_registration(model_name):
         os.path.join(dirpath, "../model_config.json"), encoding="UTF-8"
     ) as config:
         model_config = json.loads(config.read())
-        if model_name in model_config:
+        if model_name in model_config and "registration_params" in model_config[model_name]:
             param_config = model_config[model_name]["registration_params"]
             if "initial_workers" in param_config:
                 initial_workers = param_config["initial_workers"]
