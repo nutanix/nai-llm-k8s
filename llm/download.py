@@ -332,6 +332,7 @@ def run_script(params):
 
     create_mar(gen_model)
     set_config(gen_model)
+    return True
 
 
 if __name__ == "__main__":

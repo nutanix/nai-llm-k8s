@@ -1,0 +1,32 @@
+name: Python Test with LLM
+
+on:
+  push:
+    branches:
+      - main  # Change this to your main branch
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test with LLM
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: pip install pytest -r requirements.txt
+      working-directory: ./llm
+
+    - name: Run tests
+      run: python3 -m pytest tests -v
+      working-directory: ./llm
+
