@@ -80,6 +80,32 @@ def empty_folder(folder_path):
         print(f"An error occurred: {str(e)}")
 
 
+def custom_model_setup():
+    """
+    This function is used to setup custom model case.
+    Returns:
+        model_path: absolute path of model files
+    """
+    copy_file(MODEL_CONFIG_PATH, MODEL_TEMP_CONFIG_PATH)
+    with open(MODEL_CONFIG_PATH, "w", encoding="utf-8") as file:
+        json.dump({}, file)
+
+    repo_version = "11c5a3d5811f50298f278a704980280950aedb10"
+    model_path = os.path.join(
+        os.path.dirname(__file__), MODEL_NAME, repo_version, "download"
+    )
+    return model_path
+
+
+def custom_model_restore():
+    """
+    This function restores the 'model_config.json' file.
+    """
+    os.remove(MODEL_CONFIG_PATH)
+    copy_file(MODEL_TEMP_CONFIG_PATH, MODEL_CONFIG_PATH)
+    os.remove(MODEL_TEMP_CONFIG_PATH)
+
+
 def test_empty_model_name_failure():
     """
     This function tests empty model name.
@@ -222,32 +248,6 @@ def test_short_repo_version_success():
         assert False
     else:
         assert result is True
-
-
-def custom_model_setup():
-    """
-    This function is used to setup custom model case.
-    Returns:
-        model_path: absolute path of model files
-    """
-    copy_file(MODEL_CONFIG_PATH, MODEL_TEMP_CONFIG_PATH)
-    with open(MODEL_CONFIG_PATH, "w", encoding="utf-8") as file:
-        json.dump({}, file)
-
-    repo_version = "11c5a3d5811f50298f278a704980280950aedb10"
-    model_path = os.path.join(
-        os.path.dirname(__file__), MODEL_NAME, repo_version, "download"
-    )
-    return model_path
-
-
-def custom_model_restore():
-    """
-    This function restores the 'model_config.json' file.
-    """
-    os.remove(MODEL_CONFIG_PATH)
-    copy_file(MODEL_TEMP_CONFIG_PATH, MODEL_CONFIG_PATH)
-    os.remove(MODEL_TEMP_CONFIG_PATH)
 
 
 def test_custom_model_success():
