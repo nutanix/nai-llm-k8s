@@ -20,21 +20,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: 3.11
 
       - name: Install Python dependencies
-        run: pip install black pylint torchserve==0.8.2 torch==2.0.1 transformers==4.33.0 -r llm/requirements.txt
-
-      - name: Install pytest
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest
-        working-directory: ./llm
+        run: pip install pytest black pylint torchserve==0.8.2 torch==2.0.1 transformers==4.33.0 -r llm/requirements.txt
         
-      - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          black: true
-          pylint: true
+      - name: Run pylint
+        run: pylint ./llm
+
+      - name: Run black
+        run: black ./llm --check
