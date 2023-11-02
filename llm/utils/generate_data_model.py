@@ -5,6 +5,7 @@ function set_model_files_and_mar that sets model path and mar output values.
 """
 import os
 import dataclasses
+import argparse
 
 MODEL_STORE_DIR = "model-store"
 MODEL_FILES_LOCATION = "download"
@@ -72,20 +73,22 @@ class GenerateDataModel:
     is_custom = bool()
     debug = bool()
 
-    def __init__(self, params):
+    def __init__(self, params: argparse.Namespace) -> None:
         """
         This is the init function that calls set_values method.
 
         Args:
-            params: An argparse.Namespace object containing command-line arguments.
+            params (argparse.Namespace): An argparse.Namespace object
+                                         containing command-line arguments.
         """
         self.set_values(params)
 
-    def set_values(self, params):
+    def set_values(self, params: argparse.Namespace) -> None:
         """
         Set values for the GenerateDataModel object based on the command-line arguments.
         Args:
-            params: An argparse.Namespace object containing command-line arguments.
+            params (argparse.Namespace): An argparse.Namespace object
+                                        containing command-line arguments.
         Returns:
             GenerateDataModel: An instance of the GenerateDataModel
                             class with values set based on the arguments.
@@ -102,13 +105,14 @@ class GenerateDataModel:
 
         self.debug = params.debug
 
-    def set_model_files_and_mar(self, params):
+    def set_model_files_and_mar(self, params: argparse.Namespace) -> None:
         """
         This function sets model path and mar output values.
         Args:
             gen_model (GenerateDataModel): An instance of the GenerateDataModel
                                         class with relevant information.
-            params: An argparse.Namespace object containing command-line arguments.
+            params (argparse.Namespace): An argparse.Namespace object
+                                        containing command-line arguments.
         Returns:
             None
         """

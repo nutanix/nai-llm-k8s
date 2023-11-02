@@ -5,9 +5,10 @@ import os
 import sys
 import shutil
 from pathlib import Path
+from typing import List
 
 
-def check_if_path_exists(filepath, err="", is_dir=False):
+def check_if_path_exists(filepath: str, err: str = "", is_dir: bool = False) -> None:
     """
     This function checks if a given path exists.
     Args:
@@ -22,7 +23,7 @@ def check_if_path_exists(filepath, err="", is_dir=False):
         sys.exit(1)
 
 
-def create_folder_if_not_exists(path):
+def create_folder_if_not_exists(path: str) -> None:
     """
     This function creates a folder in the specified path if it does not already exist
 
@@ -35,7 +36,7 @@ def create_folder_if_not_exists(path):
     print(f"The new directory is created! - {path}")
 
 
-def delete_directory(directory_path):
+def delete_directory(directory_path: str) -> None:
     """
     This function deletes directory in the specified path
 
@@ -55,7 +56,7 @@ def delete_directory(directory_path):
         print(f"Error deleting contents from '{directory_path}': {str(e)}")
 
 
-def copy_file(source_file, destination_file):
+def copy_file(source_file: str, destination_file: str) -> None:
     """
     This function copies a file from source file path to destination file path
 
@@ -73,12 +74,12 @@ def copy_file(source_file, destination_file):
         print(f"## Error: {e}")
 
 
-def get_all_files_in_directory(directory):
+def get_all_files_in_directory(directory: str) -> List[str]:
     """
     This function provides a list of file names in a directory
     and its sub-directories
     Args:
-        path (str): The path to the directory.
+        directory (str): The path to the directory.
     Returns:
         ["file.txt", "sub-directory/file.txt"]
     """
@@ -92,7 +93,7 @@ def get_all_files_in_directory(directory):
     return output
 
 
-def check_if_folder_empty(path):
+def check_if_folder_empty(path: str) -> bool:
     """
     This function checks if a directory is empty.
     Args:

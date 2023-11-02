@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import subprocess
+from typing import Dict
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 from utils.generate_data_model import GenerateDataModel
 
@@ -12,8 +13,11 @@ REQUIREMENTS_FILE = "model_requirements.txt"
 
 
 def generate_mars(
-    gen_model: GenerateDataModel, model_config, model_store_dir, debug=False
-):
+    gen_model: GenerateDataModel,
+    model_config: str,
+    model_store_dir: str,
+    debug: bool = False,
+) -> None:
     """
     This function generates a Model Archive (MAR) file for a specified LLM using
     the provided model configuration, model store directory, and optional debug information.
@@ -90,12 +94,12 @@ def generate_mars(
 
 
 def model_archiver_command_builder(
-    model_archiver_args,
-    runtime=None,
-    archive_format=None,
-    force=True,
-    debug=False,
-):
+    model_archiver_args: Dict[str, str],
+    runtime: int = None,
+    archive_format: str = None,
+    force: bool = True,
+    debug: bool = False,
+) -> str:
     """
     This function generates the torch model archiver command that
     will be used for generating model archive file

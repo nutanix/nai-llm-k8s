@@ -7,6 +7,7 @@ import argparse
 import sys
 import os
 import time
+from typing import List, Dict
 import utils.tsutils as ts
 import utils.hf_utils as hf
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
@@ -28,7 +29,7 @@ PATH_TO_SAMPLE = "../data/qa/sample_text1.json"
 kubMemUnits = ["Ei", "Pi", "Ti", "Gi", "Mi", "Ki"]
 
 
-def get_inputs_from_folder(input_path):
+def get_inputs_from_folder(input_path: str) -> List:
     """
     Retrieve a list of file paths of inputs for inference within a specified directory.
 
@@ -48,7 +49,7 @@ def get_inputs_from_folder(input_path):
     )
 
 
-def check_if_valid_version(model_info, mount_path):
+def check_if_valid_version(model_info: Dict, mount_path: str) -> str:
     """
     Check if the model files for a specific commit ID exist in the given directory.
 
@@ -82,7 +83,13 @@ def check_if_valid_version(model_info, mount_path):
     return model_info["repo_version"]
 
 
-def create_pv(core_api, deploy_name, storage, nfs_server, nfs_path):
+def create_pv(
+    core_api: client.CoreV1Api,
+    deploy_name: str,
+    storage: str,
+    nfs_server: str,
+    nfs_path: str,
+) -> None:
     """
     This function creates a Persistent Volume using the provided parameters.
 
@@ -109,7 +116,7 @@ def create_pv(core_api, deploy_name, storage, nfs_server, nfs_path):
     core_api.create_persistent_volume(body=persistent_volume)
 
 
-def create_pvc(core_api, deploy_name, storage):
+def create_pvc(core_api: client.CoreV1Api, deploy_name: str, storage: str) -> None:
     """
     This function creates a Persistent Volume Claim using the provided parameters.
 
@@ -136,7 +143,9 @@ def create_pvc(core_api, deploy_name, storage):
     )
 
 
-def create_isvc(deploy_name, model_info, deployment_resources, model_params):
+def create_isvc(
+    deploy_name: str, model_info: Dict, deployment_resources: Dict, model_params: Dict
+) -> None:
     """
     This function creates a inference service a PyTorch Predictor that expose LLMs
     as RESTful APIs, allowing to make predictions using the deployed LLMs.
@@ -207,8 +216,12 @@ def create_isvc(deploy_name, model_info, deployment_resources, model_params):
 
 
 def execute_inference_on_inputs(
-    model_inputs, model_name, deploy_name, retry=False, debug=False
-):
+    model_inputs: List,
+    model_name: str,
+    deploy_name: str,
+    retry: bool = False,
+    debug: bool = False,
+) -> bool:
     """
     This function sends a list of model inputs to a specified model deployment using the KServe
     and gets the inference results. It is used to run inference on a LLM deployed in
@@ -271,7 +284,7 @@ def execute_inference_on_inputs(
     return is_success
 
 
-def health_check(model_name, deploy_name, model_timeout):
+def health_check(model_name: str, deploy_name: str, model_timeout: int) -> None:
     """
     This function checks if the model is registered or not.
 
@@ -307,7 +320,7 @@ def health_check(model_name, deploy_name, model_timeout):
         sys.exit(1)
 
 
-def execute(params):
+def execute(params: argparse.Namespace) -> None:
     """
     This function orchestrates the deployment and inference of a LLM
     in a Kubernetes cluster by performing tasks such as creating
