@@ -8,6 +8,7 @@ import json
 import sys
 import re
 from collections import Counter
+from typing import List
 from huggingface_hub import snapshot_download
 import utils.marsgen as mg
 import utils.hf_utils as hf
@@ -38,7 +39,7 @@ FILE_EXTENSIONS_TO_IGNORE = [
 ]
 
 
-def get_ignore_pattern_list(extension_list):
+def get_ignore_pattern_list(extension_list: List[str]) -> List[str]:
     """
     This function takes a list of file extensions and returns a list of patterns
     that can be used to filter out files with these extensions.
@@ -50,7 +51,7 @@ def get_ignore_pattern_list(extension_list):
     return ["*" + pattern for pattern in extension_list]
 
 
-def compare_lists(list1, list2):
+def compare_lists(list1: List[str], list2: List[str]) -> bool:
     """
     This function checks if two lists are equal by
     comparing their contents, regardless of the order.
@@ -64,7 +65,9 @@ def compare_lists(list1, list2):
     return Counter(list1) == Counter(list2)
 
 
-def filter_files_by_extension(filenames, extensions_to_remove):
+def filter_files_by_extension(
+    filenames: List[str], extensions_to_remove: List[str]
+) -> List[str]:
     """
     This function takes a list of filenames and a list
     of extensions to remove. It returns a new list of filenames
@@ -84,7 +87,7 @@ def filter_files_by_extension(filenames, extensions_to_remove):
     return filtered_filenames
 
 
-def set_config(gen_model: GenerateDataModel):
+def set_config(gen_model: GenerateDataModel) -> None:
     """
     This function creates a configuration file for the downloaded model and sets certain parameters.
     Args:
@@ -137,7 +140,7 @@ def set_config(gen_model: GenerateDataModel):
         config_file.writelines(config_info)
 
 
-def check_if_model_files_exist(gen_model: GenerateDataModel):
+def check_if_model_files_exist(gen_model: GenerateDataModel) -> bool:
     """
     This function compares the list of files in the downloaded model
     directory with the list of files in the HuggingFace repository.
@@ -155,7 +158,7 @@ def check_if_model_files_exist(gen_model: GenerateDataModel):
     return compare_lists(extra_files_list, repo_files)
 
 
-def check_if_mar_file_exist(gen_model: GenerateDataModel):
+def check_if_mar_file_exist(gen_model: GenerateDataModel) -> bool:
     """
     This function checks if the Model Archive (MAR) file for the
     downloaded model exists in the specified output directory.
@@ -173,7 +176,7 @@ def check_if_mar_file_exist(gen_model: GenerateDataModel):
     return False
 
 
-def read_config_for_download(gen_model: GenerateDataModel):
+def read_config_for_download(gen_model: GenerateDataModel) -> None:
     """
     This function reads repo id, version and handler name
     from model_config.json and sets values for the GenerateDataModel object.
@@ -235,7 +238,7 @@ def read_config_for_download(gen_model: GenerateDataModel):
             sys.exit(1)
 
 
-def run_download(gen_model: GenerateDataModel):
+def run_download(gen_model: GenerateDataModel) -> GenerateDataModel:
     """
     This function checks if model files are present at given model path
     otherwise downloads the given version's model files at that path.
@@ -270,7 +273,7 @@ def run_download(gen_model: GenerateDataModel):
     return gen_model
 
 
-def create_mar(gen_model: GenerateDataModel):
+def create_mar(gen_model: GenerateDataModel) -> None:
     """
     This function checks if the Model Archive (MAR) file for the downloaded
     model exists in the specified model path otherwise generates the MAR file.
@@ -311,13 +314,13 @@ def create_mar(gen_model: GenerateDataModel):
         )
 
 
-def run_script(params):
+def run_script(params: argparse.Namespace) -> bool:
     """
     Execute a series of steps to run a script for downloading model files,
     creating model archive file, and config file for a LLM.
     Args:
-        params (dict): A dictionary containing the necessary parameters
-                     and configurations for the script.
+        params (argparse.Namespace): A Namespace object containing the necessary
+                                    parameters and configurations for the script.
 
     Returns:
         None

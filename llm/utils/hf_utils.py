@@ -2,19 +2,21 @@
 Utility functions for using HuggingFace Api
 """
 import sys
+from typing import List
 from huggingface_hub import HfApi
 from huggingface_hub.utils import (
     RepositoryNotFoundError,
     RevisionNotFoundError,
 )
+from utils.generate_data_model import GenerateDataModel
 
 
-def get_repo_files_list(dl_model):
+def get_repo_files_list(gen_model: GenerateDataModel) -> List[str]:
     """
     This function returns a list of all files in the HuggingFace repo of
     the model.
     Args:
-        dl_model (DownloadDataModel): An instance of the DownloadDataModel
+        gen_model (GenerateDataModel): An instance of the GenerateDataModel
                                       class with relevant information.
     Returns:
         repo_files (list): all files in the HuggingFace repo of
@@ -27,9 +29,9 @@ def get_repo_files_list(dl_model):
     try:
         hf_api = HfApi()
         repo_files = hf_api.list_repo_files(
-            repo_id=dl_model.repo_info.repo_id,
-            revision=dl_model.repo_info.repo_version,
-            token=dl_model.repo_info.hf_token,
+            repo_id=gen_model.repo_info.repo_id,
+            revision=gen_model.repo_info.repo_version,
+            token=gen_model.repo_info.hf_token,
         )
         return repo_files
     except (RepositoryNotFoundError, RevisionNotFoundError, KeyError):
@@ -42,7 +44,7 @@ def get_repo_files_list(dl_model):
         sys.exit(1)
 
 
-def get_repo_commit_id(repo_id, revision, token):
+def get_repo_commit_id(repo_id: str, revision: str, token: str) -> str:
     """
     This function returns the whole Commit ID from HuggingFace repo of
     the model.
@@ -76,7 +78,7 @@ def get_repo_commit_id(repo_id, revision, token):
         sys.exit(1)
 
 
-def hf_token_check(repo_id, token):
+def hf_token_check(repo_id: str, token: str) -> None:
     """
     This function checks if HuggingFace token is provided for
     Llama 2 model

@@ -1,15 +1,18 @@
 """
 Serves as a handler for a LLM, allowing it to be used in an inference service.
-The handler provides functions to preprocess input data, make predictions using the model, 
+The handler provides functions to preprocess input data, make predictions using the model,
 and post-process the output for a particular use case.
 """
 import logging
 import os
 from abc import ABC
 from collections import defaultdict
+from typing import List, Dict
 import torch
 import transformers
 from ts.torch_handler.base_handler import BaseHandler
+import ts
+
 
 logger = logging.getLogger(__name__)
 logger.info("Transformers version %s", transformers.__version__)
@@ -81,7 +84,7 @@ class LLMHandler(BaseHandler, ABC):
         self.device_map = None
         self.model = None
 
-    def initialize(self, context):
+    def initialize(self, context: ts.context.Context):
         """
         This method loads the Hugging Face model and tokenizer based on
         the provided model name and model files present in MAR file.
@@ -121,11 +124,11 @@ class LLMHandler(BaseHandler, ABC):
         self.initialized = True
         logger.info("Initialized TorchServe Server!")
 
-    def preprocess(self, data):
+    def preprocess(self, data: List) -> torch.Tensor:
         """
         This method tookenizes input text using the associated tokenizer.
         Args:
-            text (str): The input text to be tokenized.
+            data (str): The input text to be tokenized.
         Returns:
             Tensor: Tokenized input data
         """
@@ -164,7 +167,7 @@ class LLMHandler(BaseHandler, ABC):
 
         return encoded_input
 
-    def inference(self, data, *args, **kwargs):
+    def inference(self, data: torch.Tensor, *args, **kwargs) -> List:
         """
         This method reads the generation parameters set as environment vairables
         and uses the preprocessed tokens and generation parameters to generate a
@@ -203,13 +206,13 @@ class LLMHandler(BaseHandler, ABC):
         logger.info("Generated text is: %s", ", ".join(map(str, inference)))
         return inference
 
-    def postprocess(self, data):
+    def postprocess(self, data: List) -> List:
         """
         This method returns the list of generated text recieved.
         Args:
             data (list(str)): A list containing the output text of model generation.
         Returns:
-            list(str): A list containing model's generated output.
+            list: A list containing model's generated output.
         """
         response_list = []
         idx = 0
@@ -241,7 +244,7 @@ class LLMHandler(BaseHandler, ABC):
 
         return response_list
 
-    def _batch_to_json(self, data):
+    def _batch_to_json(self, data: List) -> List:
         """
         Splits batch output to json objects
         """
@@ -250,7 +253,7 @@ class LLMHandler(BaseHandler, ABC):
             output.append(self._to_json(item))
         return output
 
-    def _to_json(self, data):
+    def _to_json(self, data: str) -> Dict:
         """
         Constructs JSON object from data
         """
@@ -265,12 +268,11 @@ class LLMHandler(BaseHandler, ABC):
         output_data["data"] = [data]
         return output_data
 
-    def get_env_value(self, env_var):
+    def get_env_value(self, env_var: str) -> float:
         """
         This function gets the value of an environment variable as a float.
         Args:
             env_var (str): The name of the environment variable to retrieve.
-
         Returns:
             float or None: The float value of the environment variable
                            if conversion is successful, or None otherwise.

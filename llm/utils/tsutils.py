@@ -4,12 +4,17 @@ Utility functions for running inference and getiing model parameters
 import os
 import json
 import collections
+from typing import Dict, Tuple
 import requests
 
 
 def run_inference_v2(
-    model_name, file_name, connection_params, timeout=120, debug=False
-):
+    model_name: str,
+    file_name: str,
+    connection_params: Dict,
+    timeout: int = 120,
+    debug: bool = False,
+) -> requests.Response:
     """
     This function runs inference using a specified model via a REST API
     Args:
@@ -50,7 +55,7 @@ def run_inference_v2(
     return response
 
 
-def get_model_params(model_name):
+def get_model_params(model_name: str) -> Dict[str, str]:
     """
     This function reads the model parameters from model_config.json and stores then in a dict.
     Args:
@@ -94,7 +99,7 @@ def get_model_params(model_name):
     return model_params
 
 
-def get_params_for_registration(model_name):
+def get_params_for_registration(model_name: str) -> Tuple[str, str, str, str]:
     """
     This function reads registration parameters from model_config.json returns them.
     The generation parameters are :
