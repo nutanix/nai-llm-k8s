@@ -8,7 +8,7 @@ from kubernetes import client, config
 from kserve import KServeClient
 
 
-def kubernetes(deploy_name):
+def kubernetes(deploy_name: str) -> None:
     """
     This function cleans up various Kubernetes resources,
     including deleting the deployment, persistent volume claims (PVCs), and

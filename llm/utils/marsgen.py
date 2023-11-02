@@ -5,16 +5,25 @@ import json
 import os
 import sys
 import subprocess
+from typing import Dict
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
+from utils.generate_data_model import GenerateDataModel
+
+REQUIREMENTS_FILE = "model_requirements.txt"
 
 
-def generate_mars(dl_model, model_config, model_store_dir, debug=False):
+def generate_mars(
+    gen_model: GenerateDataModel,
+    model_config: str,
+    model_store_dir: str,
+    debug: bool = False,
+) -> None:
     """
     This function generates a Model Archive (MAR) file for a specified LLM using
     the provided model configuration, model store directory, and optional debug information.
 
     Args:
-        dl_model (LLM): An object representing the LLM to generate the MAR for.
+        gen_model (LLM): An object representing the LLM to generate the MAR for.
         model_config (str): The path to the JSON model configuration file.
         model_store_dir (str): The directory where the MAR file will be stored.
         debug (bool, optional): A flag indicating whether to
@@ -36,34 +45,29 @@ def generate_mars(dl_model, model_config, model_store_dir, debug=False):
 
     with open(model_config, encoding="utf-8") as f:
         models = json.loads(f.read())
-        if dl_model.model_name not in models:
-            print(
-                "## Please check your model name, it should be one of the following : "
-            )
-            print(list(models.keys()))
-            sys.exit(1)
-
-        model = models[dl_model.model_name]
+        if gen_model.model_name not in models:
+            if not gen_model.is_custom:
+                print(
+                    "## Please check your model name, it should be one of the following : "
+                )
+                print(list(models.keys()))
+                sys.exit(1)
 
         extra_files = None
-        extra_files_list = get_all_files_in_directory(dl_model.mar_utils.model_path)
+        extra_files_list = get_all_files_in_directory(gen_model.mar_utils.model_path)
         extra_files_list = [
-            os.path.join(dl_model.mar_utils.model_path, file)
+            os.path.join(gen_model.mar_utils.model_path, file)
             for file in extra_files_list
         ]
         extra_files = ",".join(extra_files_list)
 
-        requirements_file = None
-        if model.get("requirements_file") and model["requirements_file"]:
-            requirements_file = os.path.join(
-                os.path.dirname(__file__), model["requirements_file"]
-            )
-            check_if_path_exists(requirements_file)
+        requirements_file = os.path.join(os.path.dirname(__file__), REQUIREMENTS_FILE)
+        check_if_path_exists(requirements_file)
 
         model_archiver_args = {
-            "model_name": dl_model.model_name,
-            "version": dl_model.repo_info.repo_version,
-            "handler": dl_model.mar_utils.handler_path,
+            "model_name": gen_model.model_name,
+            "version": gen_model.repo_info.repo_version,
+            "handler": gen_model.mar_utils.handler_path,
             "extra_files": extra_files,
             "requirements_file": requirements_file,
             "export_path": model_store_dir,
@@ -78,24 +82,24 @@ def generate_mars(dl_model, model_config, model_store_dir, debug=False):
 
         try:
             subprocess.check_call(cmd, shell=True)
-            marfile = f"{dl_model.model_name}.mar"
+            marfile = f"{gen_model.model_name}.mar"
             print(f"## {marfile} is generated.\n")
         except subprocess.CalledProcessError as exc:
             print("## Creation failed !\n")
             if debug:
-                print(f"## {model['model_name']} creation failed !, error: {exc}\n")
+                print(f"## {gen_model.model_name} creation failed !, error: {exc}\n")
             sys.exit(1)
 
     os.chdir(cwd)
 
 
 def model_archiver_command_builder(
-    model_archiver_args,
-    runtime=None,
-    archive_format=None,
-    force=True,
-    debug=False,
-):
+    model_archiver_args: Dict[str, str],
+    runtime: int = None,
+    archive_format: str = None,
+    force: bool = True,
+    debug: bool = False,
+) -> str:
     """
     This function generates the torch model archiver command that
     will be used for generating model archive file
