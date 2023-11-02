@@ -7,11 +7,12 @@ import logging
 import os
 from abc import ABC
 from collections import defaultdict
+from typing import List, Dict
 import torch
 import transformers
 from ts.torch_handler.base_handler import BaseHandler
-from ts import context
-from typing import List, Any, Dict
+import ts
+
 
 logger = logging.getLogger(__name__)
 logger.info("Transformers version %s", transformers.__version__)
@@ -83,7 +84,7 @@ class LLMHandler(BaseHandler, ABC):
         self.device_map = None
         self.model = None
 
-    def initialize(self, context: context.Context):
+    def initialize(self, context: ts.context.Context):
         """
         This method loads the Hugging Face model and tokenizer based on
         the provided model name and model files present in MAR file.

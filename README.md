@@ -165,7 +165,7 @@ python3 download.py --no_download [--repo_version <REPO_COMMIT_ID> --handler <CU
 - model_name:       Name of custom model, this name must not be in model_config
 - repo_version:     Any model version, defaults to "1.0" (optional)
 - model_path:       Absolute path of custom model files (should be non empty)
-- output:           Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
+- output:           Mount path to your nfs server to be used in the kube PV where config.properties and model archive file be stored
 - handler:          Path to custom handler, defaults to llm/handler.py (optional)<br />
 
 ### Start Torchserve and run inference for custom model
