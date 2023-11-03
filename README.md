@@ -80,7 +80,7 @@ python3 $WORK_DIR/llm/download.py --model_name llama2_7b --output /mnt/llm --hf_
 
 Run the following command for starting Kubeflow serving and running inference on the given input:
 ```
-bash run.sh  -n <MODEL_NAME> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -d <INPUT_PATH> -v <REPO_COMMIT_ID>]
+bash run.sh  -n <MODEL_NAME> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -d <INPUT_PATH> -v <REPO_COMMIT_ID> -t <Your_HuggingFace_Hub_Token>]
 ```
 - n:    Name of model
 - d:    Absolute path of input data folder (Optional)
@@ -89,9 +89,10 @@ bash run.sh  -n <MODEL_NAME> -g <NUM_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <
 - m:    Mount path to your nfs server to be used in the kube PV where model files and model archive file be stored
 - e:    Name of the deployment metadata
 - v:    Commit id of model's repo from HuggingFace (optional, if not provided default set in model_config will be used)
+- t:    Your HuggingFace token. Needed for LLAMA(2) model.
 
 For model names, we support MPT-7B, Falcon-7B and Llama2-7B.
-Should print "Inference Run Successful" as a message at the end
+Should print "Inference Run Successful" as a message once the Inference Server has successfully started
 
 ##### Examples
 
@@ -105,7 +106,7 @@ bash $WORK_DIR/llm/run.sh -n falcon_7b -d data/qa -g 1 -e llm-deploy -f '1.1.1.1
 ```
 For 1 GPU Inference with official Llama2-7B model and keep inference server alive:
 ```
-bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -g 1 -e llm-deploy -f '1.1.1.1:/llm' -m /mnt/llm
+bash $WORK_DIR/llm/run.sh -n llama2_7b -d data/summarize -g 1 -e llm-deploy -f '1.1.1.1:/llm' -m /mnt/llm -t <Your_HuggingFace_Hub_Token>
 ```
 
 #### Inference Check
@@ -144,7 +145,7 @@ curl -v -H "Host: ${SERVICE_HOSTNAME}" -H "Content-Type: application/json" http:
 
 #### Cleanup Inference deployment
 
-If keep alive flag was set in the bash script, then you can run the following command to stop the server and clean up temporary files
+Run the following command to stop the inference server and unmount PV and PVC.
 
 python3 $WORK_DIR/llm/cleanup.py --deploy_name <DEPLOYMENT_NAME>
 
