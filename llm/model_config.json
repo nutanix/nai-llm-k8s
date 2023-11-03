@@ -1,7 +1,7 @@
 {
     "mpt_7b": {
         "repo_id": "mosaicml/mpt-7b",
-        "repo_version": "00f72b21dd089db80c7fb50cb606996751500f6d",
+        "repo_version": "ada218f9a93b5f1c6dce48a4cc9ff01fcba431e7",
         "handler": "handler.py",
         "model_params":{
             "temperature" : 0.7,
@@ -52,7 +52,7 @@
     },
     "phi-1_5": {
         "repo_id": "microsoft/phi-1_5",
-        "repo_version": "b6a7e2fe15c21f5847279f23e280cc5a0e7049ef",
+        "repo_version": "92557d03bb12543040c8bb5f0475cbdd9968f05f",
         "handler": "handler.py",
         "registration_params":{
             "batch_size" : 1,
