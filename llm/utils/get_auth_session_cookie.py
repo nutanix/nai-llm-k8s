@@ -37,13 +37,13 @@ def get_auth_session_cookie(email: str, password: str) -> str:
     return session.cookies.get_dict()["authservice_session"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Create the argument parser
-    parser = argparse.ArgumentParser(description='Script to get auth session cookie.')
+    parser = argparse.ArgumentParser(description="Script to get auth session cookie.")
 
     # Add arguments
-    parser.add_argument('--email', type=str, help='user email', required=True)
-    parser.add_argument('--password', type=str, help='user password', required=True)
+    parser.add_argument("--email", type=str, help="user email", required=True)
+    parser.add_argument("--password", type=str, help="user password", required=True)
 
     # Parse the command-line arguments
     args = parser.parse_args()
