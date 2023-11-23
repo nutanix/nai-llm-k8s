@@ -6,8 +6,8 @@ python get_auth_session_cookie.py --email <EMAIL> --password <PASSWORD>
 """
 import argparse
 import os
-import requests
 import sys
+import requests
 
 
 def get_auth_session_cookie(email: str, password: str) -> str:
@@ -25,9 +25,9 @@ def get_auth_session_cookie(email: str, password: str) -> str:
         print("INGRESS_PORT env variable is not set")
         sys.exit(1)
 
-    HOST = f"http://{ingress_host}:{ingress_port}/"
+    host = f"http://{ingress_host}:{ingress_port}/"
     session = requests.Session()
-    response = session.get(HOST)
+    response = session.get(host)
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
