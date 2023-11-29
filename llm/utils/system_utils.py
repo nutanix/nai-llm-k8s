@@ -33,7 +33,7 @@ def create_folder_if_not_exists(path: str) -> None:
         None
     """
     os.makedirs(path, exist_ok=True)
-    print(f"The new directory is created! - {path}")
+    print(f"The new directory is created! - {path} \n")
 
 
 def delete_directory(directory_path: str) -> None:
@@ -51,7 +51,7 @@ def delete_directory(directory_path: str) -> None:
         return
     try:
         shutil.rmtree(directory_path)
-        print(f"Deleted all contents from '{directory_path}'")
+        print(f"Deleted all contents from '{directory_path}' \n")
     except OSError as e:
         print(f"Error deleting contents from '{directory_path}': {str(e)}")
 

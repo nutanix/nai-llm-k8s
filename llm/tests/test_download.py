@@ -50,6 +50,7 @@ def set_args(
     args.model_path = model_path
     args.no_download = True
     args.repo_version = repo_version
+    args.repo_id = ""
     args.handler_path = handler_path
     args.hf_token = None
     args.debug = False
@@ -250,7 +251,7 @@ def test_short_repo_version_success():
         assert result is True
 
 
-def test_custom_model_success():
+def test_custom_model_with_modelfiles_success():
     """
     This function tests the custom model case.
     This is done by clearing the 'model_config.json' and
@@ -285,8 +286,76 @@ def test_custom_model_no_model_files_failure():
     args.no_download = False
     try:
         download.run_script(args)
-        custom_model_restore()
     except SystemExit as e:
+        custom_model_restore()
+        assert e.code == 1
+    else:
+        assert False
+
+
+def test_custom_model_with_repo_id_success():
+    """
+    This function tests the custom model case where
+    model files are to be downloaded for provided
+    repo ID.
+    This is done by clearing the 'model_config.json' and
+    generating the 'GPT2' MAR file.
+    Expected result: Success.
+    """
+    model_path = custom_model_setup()
+    args = set_args(MODEL_NAME, OUTPUT, model_path)
+    args.repo_id = "gpt2"
+    try:
+        result = download.run_script(args)
+        custom_model_restore()
+    except SystemExit:
+        assert False
+    else:
+        assert result is True
+
+
+def test_custom_model_wrong_repo_id_failure():
+    """
+    This function tests the custom model case when
+    model repo ID is wrong.
+    Expected result: Failure.
+    """
+    model_path = custom_model_setup()
+    model_store_path = os.path.join(
+        os.path.dirname(__file__), MODEL_NAME, "model-store"
+    )
+    empty_folder(model_path)
+    empty_folder(model_store_path)
+    args = set_args(MODEL_NAME, OUTPUT, model_path)
+    args.repo_id = "wrong_repo_id"
+    try:
+        download.run_script(args)
+    except SystemExit as e:
+        custom_model_restore()
+        assert e.code == 1
+    else:
+        assert False
+
+
+def test_custom_model_wrong_repo_version_failure():
+    """
+    This function tests the custom model case when
+    model repo version is wrong.
+    Expected result: Failure.
+    """
+    model_path = custom_model_setup()
+    model_store_path = os.path.join(
+        os.path.dirname(__file__), MODEL_NAME, "model-store"
+    )
+    empty_folder(model_path)
+    empty_folder(model_store_path)
+    args = set_args(MODEL_NAME, OUTPUT, model_path)
+    args.repo_id = "gpt2"
+    args.repo_version = "wrong_version"
+    try:
+        download.run_script(args)
+    except SystemExit as e:
+        custom_model_restore()
         assert e.code == 1
     else:
         assert False

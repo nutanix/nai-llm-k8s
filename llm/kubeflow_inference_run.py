@@ -8,6 +8,7 @@ import sys
 import os
 import time
 from typing import List, Dict
+import tqdm
 import utils.tsutils as ts
 import utils.hf_utils as hf
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
@@ -300,8 +301,15 @@ def health_check(model_name: str, deploy_name: str, model_timeout: int) -> None:
     model_input = os.path.join(os.path.dirname(__file__), PATH_TO_SAMPLE)
 
     retry_count = 0
-    sleep_time = 30
+    sleep_time = 15
     success = False
+    total_tries = model_timeout / sleep_time
+    progress_bar = tqdm.tqdm(
+        total=total_tries,
+        unit="check",
+        desc="Waiting for Model to be ready",
+        bar_format="{desc}: |{bar}| {n_fmt}/{total_fmt} checks",
+    )
     while not success and retry_count * sleep_time < model_timeout:
         success = execute_inference_on_inputs(
             [model_input], model_name, deploy_name, retry=True
@@ -310,12 +318,16 @@ def health_check(model_name: str, deploy_name: str, model_timeout: int) -> None:
         if not success:
             time.sleep(sleep_time)
             retry_count += 1
+            progress_bar.update(1)
 
     if success:
-        print("## Health check passed. Model deployed.\n\n")
+        progress_bar.update(total_tries - retry_count)
+        progress_bar.close()
+        print("\n## Health check passed. Model deployed.\n")
     else:
+        progress_bar.close()
         print(
-            f"## Failed health check after multiple retries for model - {model_name} \n"
+            f"\n## Failed health check after multiple retries for model - {model_name} \n"
         )
         sys.exit(1)
 
@@ -377,7 +389,7 @@ def execute(params: argparse.Namespace) -> None:
     create_pvc(core_api, deploy_name, storage)
     create_isvc(deploy_name, model_info, deployment_resources, model_params)
 
-    print("wait for model registration to complete, will take some time")
+    print("\nWait for model registration to complete, will take some time. \n")
     health_check(model_info["model_name"], deploy_name, model_timeout)
 
     if input_path:

@@ -100,6 +100,7 @@ class GenerateDataModel:
 
         self.mar_utils.handler_path = params.handler_path
 
+        self.repo_info.repo_id = params.repo_id
         self.repo_info.repo_version = params.repo_version
         self.repo_info.hf_token = params.hf_token
 
