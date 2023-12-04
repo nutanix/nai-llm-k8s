@@ -29,7 +29,7 @@ def set_args(
     model_name="",
     output="",
     model_path="",
-    repo_version="",
+    repo_version=None,
     handler_path="",
 ):
     """
