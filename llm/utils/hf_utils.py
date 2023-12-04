@@ -7,6 +7,8 @@ from huggingface_hub import HfApi
 from huggingface_hub.utils import (
     RepositoryNotFoundError,
     RevisionNotFoundError,
+    HfHubHTTPError,
+    HFValidationError,
 )
 from utils.generate_data_model import GenerateDataModel
 
@@ -34,11 +36,17 @@ def get_repo_files_list(gen_model: GenerateDataModel) -> List[str]:
             token=gen_model.repo_info.hf_token,
         )
         return repo_files
-    except (RepositoryNotFoundError, RevisionNotFoundError, KeyError):
+    except (
+        HfHubHTTPError,
+        HFValidationError,
+        RepositoryNotFoundError,
+        RevisionNotFoundError,
+        KeyError,
+    ):
         print(
             (
-                "## Error: Please check either repo_id, repo_version "
-                "or huggingface token is not correct"
+                "\n## Error: Please check either repo_id, repo_version "
+                "or huggingface token is not correct\n"
             )
         )
         sys.exit(1)
@@ -68,11 +76,16 @@ def get_repo_commit_id(repo_id: str, revision: str, token: str) -> str:
             token=token,
         )
         return commit_info[0].commit_id
-    except (RepositoryNotFoundError, RevisionNotFoundError):
+    except (
+        HfHubHTTPError,
+        HFValidationError,
+        RepositoryNotFoundError,
+        RevisionNotFoundError,
+    ):
         print(
             (
-                "## Error: Please check either repo_id, repo_version "
-                "or huggingface token is not correct"
+                "\n## Error: Please check either repo_id, repo_version "
+                "or huggingface token is not correct\n"
             )
         )
         sys.exit(1)

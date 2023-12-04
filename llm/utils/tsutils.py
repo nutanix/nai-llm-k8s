@@ -78,7 +78,7 @@ def get_model_params(model_name: str) -> Dict[str, str]:
         else:
             model_params["is_custom"] = True
             print(
-                f"## Using custom MAR file : {model_name}.mar\n\n"
+                f"\n## Using custom MAR file : {model_name}.mar\n\n"
                 "WARNING: This model has not been validated on any GPUs\n\n"
             )
 

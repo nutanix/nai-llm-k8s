@@ -33,7 +33,7 @@ def create_folder_if_not_exists(path: str) -> None:
         None
     """
     os.makedirs(path, exist_ok=True)
-    print(f"The new directory is created! - {path}")
+    print(f"The new directory is created! - {path} \n")
 
 
 def delete_directory(directory_path: str) -> None:
@@ -51,7 +51,7 @@ def delete_directory(directory_path: str) -> None:
         return
     try:
         shutil.rmtree(directory_path)
-        print(f"Deleted all contents from '{directory_path}'")
+        print(f"Deleted all contents from '{directory_path}' \n")
     except OSError as e:
         print(f"Error deleting contents from '{directory_path}': {str(e)}")
 
@@ -103,3 +103,25 @@ def check_if_folder_empty(path: str) -> bool:
     """
     dir_items = os.listdir(path)
     return len(dir_items) == 0
+
+
+def get_files_sizes(file_paths: List[str]) -> float:
+    """
+    Calculate the total size of the specified files.
+
+    Args:
+        file_paths (list): A list of file paths for which the sizes should be calculated.
+
+    Returns:
+        total_size (float): The sum of sizes (in bytes) of all the specified files.
+    """
+    total_size = 0
+
+    for file_path in file_paths:
+        try:
+            size = os.path.getsize(file_path)
+            total_size += size
+        except FileNotFoundError:
+            print(f"File not found: {file_path}")
+
+    return total_size

@@ -25,6 +25,8 @@ class MarUtils:
     mar_output = str()
     model_path = str()
     handler_path = str()
+    extra_files = str()
+    requirements_file = str()
 
 
 @dataclasses.dataclass
@@ -100,6 +102,7 @@ class GenerateDataModel:
 
         self.mar_utils.handler_path = params.handler_path
 
+        self.repo_info.repo_id = params.repo_id
         self.repo_info.repo_version = params.repo_version
         self.repo_info.hf_token = params.hf_token
 

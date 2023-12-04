@@ -199,7 +199,7 @@ def read_config_for_download(gen_model: GenerateDataModel) -> None:
 
             hf.hf_token_check(gen_model.repo_info.repo_id, gen_model.repo_info.hf_token)
 
-            if gen_model.repo_info.repo_version == "":
+            if not gen_model.repo_info.repo_version:
                 gen_model.repo_info.repo_version = model["repo_version"]
 
             gen_model.repo_info.repo_version = hf.get_repo_commit_id(
@@ -225,15 +225,36 @@ def read_config_for_download(gen_model: GenerateDataModel) -> None:
                     os.path.dirname(__file__),
                     HANDLER,
                 )
-            if gen_model.repo_info.repo_version == "":
+            if not gen_model.repo_info.repo_version:
                 gen_model.repo_info.repo_version = "1.0"
+        elif gen_model.repo_info.repo_id:
+            hf.hf_token_check(gen_model.repo_info.repo_id, gen_model.repo_info.hf_token)
+            gen_model.repo_info.repo_version = hf.get_repo_commit_id(
+                repo_id=gen_model.repo_info.repo_id,
+                revision=gen_model.repo_info.repo_version,
+                token=gen_model.repo_info.hf_token,
+            )
+            gen_model.is_custom = True
+            if gen_model.mar_utils.handler_path == "":
+                gen_model.mar_utils.handler_path = os.path.join(
+                    os.path.dirname(__file__),
+                    HANDLER,
+                )
         else:
             print(
-                "## Please check your model name, it should be one of the following : "
+                "## If you want to create a model archive file with the supported models, "
+                "make sure you're model name is present in the below : "
             )
             print(list(models.keys()))
             print(
-                "If it is a custom model and you have model files include no_download flag : "
+                "If you want to create a model archive file for a custom model, there "
+                "are two methods:\n"
+                "1. If you have already downloaded the custom model files, please include"
+                " the --no_download flag and provide the model_path directory which contains "
+                "the model files.\n"
+                "2. If you need to download the model files, provide the HuggingFace "
+                "repository ID along with a model_path driectory where the model "
+                "files are to be downloaded."
             )
             sys.exit(1)
 
@@ -295,13 +316,13 @@ def create_mar(gen_model: GenerateDataModel) -> None:
         else:
             if check_if_folder_empty(gen_model.mar_utils.model_path):
                 print(
-                    f"\n##Error: {gen_model.model_name} model files not found"
-                    f" in the provided path: {gen_model.mar_utils.model_path}"
+                    f"\n##Error: {gen_model.model_name} model files for the custom"
+                    f" model not found in the provided path: {gen_model.mar_utils.model_path}"
                 )
                 sys.exit(1)
             else:
                 print(
-                    f"\n## Generating MAR file for custom model files: {gen_model.model_name}"
+                    f"\n## Generating MAR file for custom model files: {gen_model.model_name} \n"
                 )
 
         create_folder_if_not_exists(gen_model.mar_utils.mar_output)
@@ -349,6 +370,13 @@ if __name__ == "__main__":
         help="name of the model",
     )
     parser.add_argument(
+        "--repo_id",
+        type=str,
+        default="",
+        metavar="ri",
+        help="HuggingFace repository ID (In case of custom model download)",
+    )
+    parser.add_argument(
         "--no_download", action="store_false", help="flag to not download"
     )
     parser.add_argument(
@@ -376,7 +404,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--repo_version",
         type=str,
-        default="",
+        default=None,
         metavar="rv",
         help="commit id of the HuggingFace Repo",
     )
