@@ -25,6 +25,8 @@ class MarUtils:
     mar_output = str()
     model_path = str()
     handler_path = str()
+    extra_files = str()
+    requirements_file = str()
 
 
 @dataclasses.dataclass

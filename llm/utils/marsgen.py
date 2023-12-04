@@ -7,9 +7,13 @@ import sys
 import subprocess
 import threading
 import time
-from typing import Dict, List
+from typing import Dict
 import tqdm
-from utils.system_utils import check_if_path_exists, get_all_files_in_directory
+from utils.system_utils import (
+    check_if_path_exists,
+    get_all_files_in_directory,
+    get_files_sizes,
+)
 from utils.generate_data_model import GenerateDataModel
 
 REQUIREMENTS_FILE = "model_requirements.txt"
@@ -50,28 +54,6 @@ def monitor_marfile_size(
     print(
         f"\nModel Archive file size: {os.path.getsize(file_path) / (1024 ** 3):.2f} GB\n"
     )
-
-
-def get_files_sizes(file_paths: List[str]) -> float:
-    """
-    Calculate the total size of the specified files.
-
-    Args:
-        file_paths (list): A list of file paths for which the sizes should be calculated.
-
-    Returns:
-        total_size (float): The sum of sizes (in bytes) of all the specified files.
-    """
-    total_size = 0
-
-    for file_path in file_paths:
-        try:
-            size = os.path.getsize(file_path)
-            total_size += size
-        except FileNotFoundError:
-            print(f"File not found: {file_path}")
-
-    return total_size
 
 
 def generate_mars(
@@ -115,26 +97,25 @@ def generate_mars(
                 print(list(models.keys()))
                 sys.exit(1)
 
-        files_path = {}
-        files_path["extra_files"] = None
+        gen_model.mar_utils.extra_files = None
         extra_files_list = get_all_files_in_directory(gen_model.mar_utils.model_path)
         extra_files_list = [
             os.path.join(gen_model.mar_utils.model_path, file)
             for file in extra_files_list
         ]
-        files_path["extra_files"] = ",".join(extra_files_list)
+        gen_model.mar_utils.extra_files = ",".join(extra_files_list)
 
-        files_path["requirements_file"] = os.path.join(
+        gen_model.mar_utils.requirements_file = os.path.join(
             os.path.dirname(__file__), REQUIREMENTS_FILE
         )
-        check_if_path_exists(files_path["requirements_file"])
+        check_if_path_exists(gen_model.mar_utils.requirements_file)
 
         model_archiver_args = {
             "model_name": gen_model.model_name,
             "version": gen_model.repo_info.repo_version,
             "handler": gen_model.mar_utils.handler_path,
-            "extra_files": files_path["extra_files"],
-            "requirements_file": files_path["requirements_file"],
+            "extra_files": gen_model.mar_utils.extra_files,
+            "requirements_file": gen_model.mar_utils.requirements_file,
             "export_path": model_store_dir,
         }
         cmd = model_archiver_command_builder(
@@ -146,8 +127,13 @@ def generate_mars(
             print(f"## In directory: {os.getcwd()} | Executing command: {cmd}\n")
 
         try:
+            # Event to stop the thread from monitoring output file size.
             stop_monitoring = threading.Event()
+
+            # Approximate size of output Model Archive file.
             approx_marfile_size = get_files_sizes(extra_files_list) / 1.15
+
+            # Creating a thread to monitor MAR file size while generation and show progress bar.
             mar_size_thread = threading.Thread(
                 target=monitor_marfile_size,
                 args=(

@@ -199,7 +199,7 @@ def read_config_for_download(gen_model: GenerateDataModel) -> None:
 
             hf.hf_token_check(gen_model.repo_info.repo_id, gen_model.repo_info.hf_token)
 
-            if gen_model.repo_info.repo_version == "":
+            if not gen_model.repo_info.repo_version:
                 gen_model.repo_info.repo_version = model["repo_version"]
 
             gen_model.repo_info.repo_version = hf.get_repo_commit_id(
@@ -225,12 +225,9 @@ def read_config_for_download(gen_model: GenerateDataModel) -> None:
                     os.path.dirname(__file__),
                     HANDLER,
                 )
-            if gen_model.repo_info.repo_version == "":
+            if not gen_model.repo_info.repo_version:
                 gen_model.repo_info.repo_version = "1.0"
         elif gen_model.repo_info.repo_id:
-            if gen_model.repo_info.repo_version == "":
-                gen_model.repo_info.repo_version = None
-
             hf.hf_token_check(gen_model.repo_info.repo_id, gen_model.repo_info.hf_token)
             gen_model.repo_info.repo_version = hf.get_repo_commit_id(
                 repo_id=gen_model.repo_info.repo_id,
@@ -407,7 +404,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--repo_version",
         type=str,
-        default="",
+        default=None,
         metavar="rv",
         help="commit id of the HuggingFace Repo",
     )
