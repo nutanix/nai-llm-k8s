@@ -96,7 +96,7 @@ class GenerateDataModel:
                             class with values set based on the arguments.
         """
         self.model_name = params.model_name
-        self.download_model = params.no_download
+        self.download_model = params.skip_download
         self.output = params.output
         self.is_custom = False
 
