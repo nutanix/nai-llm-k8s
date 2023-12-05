@@ -1,5 +1,5 @@
 """
-This module runs pytest tests for download.py file.
+This module runs pytest tests for generate.py file.
 
 Attributes:
     MODEL_NAME: Name of the model used for testing (gpt2).
@@ -12,7 +12,7 @@ import argparse
 import json
 import shutil
 import pytest
-import download
+import generate
 from utils.system_utils import copy_file
 
 MODEL_NAME = "gpt2"
@@ -33,7 +33,7 @@ def set_args(
     handler_path="",
 ):
     """
-    This function sets the arguments to run download.py.
+    This function sets the arguments to run generate.py.
 
     Args:
         repo_version (str, optional): Repository version of the model. Defaults to "".
@@ -42,13 +42,13 @@ def set_args(
         handler_path (str, optional): Path to Torchserve handler. Defaults to "".
 
     Returns:
-        argparse.Namespace: Parameters to run download.py.
+        argparse.Namespace: Parameters to run generate.py.
     """
     args = argparse.Namespace()
     args.model_name = model_name
     args.output = output
     args.model_path = model_path
-    args.no_download = True
+    args.skip_download = True
     args.repo_version = repo_version
     args.repo_id = ""
     args.handler_path = handler_path
@@ -114,7 +114,7 @@ def test_empty_model_name_failure():
     """
     args = set_args(output=OUTPUT)
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         assert e.code == 1
     else:
@@ -128,7 +128,7 @@ def test_empty_output_failure():
     """
     args = set_args(MODEL_NAME)
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         assert e.code == 1
     else:
@@ -142,7 +142,7 @@ def test_wrong_model_name_failure():
     """
     args = set_args("wrong_model_name", OUTPUT)
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         assert e.code == 1
     else:
@@ -156,7 +156,7 @@ def test_wrong_output_failure():
     """
     args = set_args(MODEL_NAME, "/wrong_output_path")
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         assert e.code == 1
     else:
@@ -170,7 +170,7 @@ def test_wrong_repo_version_failure():
     """
     args = set_args(MODEL_NAME, OUTPUT, repo_version="wrong_repo_version")
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         assert e.code == 1
     else:
@@ -184,7 +184,7 @@ def test_wrong_handler_path_failure():
     """
     args = set_args(MODEL_NAME, OUTPUT, handler_path="/wrong_path.py")
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         assert e.code == 1
     else:
@@ -197,9 +197,9 @@ def test_no_model_files_failure():
     Expected result: Failure.
     """
     args = set_args(MODEL_NAME, OUTPUT)
-    args.no_download = False
+    args.skip_download = False
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         assert e.code == 1
     else:
@@ -213,7 +213,7 @@ def test_default_success():
     """
     args = set_args(MODEL_NAME, OUTPUT)
     try:
-        result = download.run_script(args)
+        result = generate.run_script(args)
     except SystemExit:
         assert False
     else:
@@ -229,7 +229,7 @@ def test_vaild_repo_version_success():
         MODEL_NAME, OUTPUT, repo_version="e7da7f221d5bf496a48136c0cd264e630fe9fcc8"
     )
     try:
-        result = download.run_script(args)
+        result = generate.run_script(args)
     except SystemExit:
         assert False
     else:
@@ -244,7 +244,7 @@ def test_short_repo_version_success():
     """
     args = set_args(MODEL_NAME, OUTPUT, repo_version="11c5a3d581")
     try:
-        result = download.run_script(args)
+        result = generate.run_script(args)
     except SystemExit:
         assert False
     else:
@@ -260,9 +260,9 @@ def test_custom_model_with_modelfiles_success():
     """
     model_path = custom_model_setup()
     args = set_args(MODEL_NAME, OUTPUT, model_path)
-    args.no_download = False
+    args.skip_download = False
     try:
-        result = download.run_script(args)
+        result = generate.run_script(args)
         custom_model_restore()
     except SystemExit:
         assert False
@@ -283,9 +283,9 @@ def test_custom_model_no_model_files_failure():
     empty_folder(model_path)
     empty_folder(model_store_path)
     args = set_args(MODEL_NAME, OUTPUT, model_path)
-    args.no_download = False
+    args.skip_download = False
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         custom_model_restore()
         assert e.code == 1
@@ -306,7 +306,7 @@ def test_custom_model_with_repo_id_success():
     args = set_args(MODEL_NAME, OUTPUT, model_path)
     args.repo_id = "gpt2"
     try:
-        result = download.run_script(args)
+        result = generate.run_script(args)
         custom_model_restore()
     except SystemExit:
         assert False
@@ -329,7 +329,7 @@ def test_custom_model_wrong_repo_id_failure():
     args = set_args(MODEL_NAME, OUTPUT, model_path)
     args.repo_id = "wrong_repo_id"
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         custom_model_restore()
         assert e.code == 1
@@ -353,7 +353,7 @@ def test_custom_model_wrong_repo_version_failure():
     args.repo_id = "gpt2"
     args.repo_version = "wrong_version"
     try:
-        download.run_script(args)
+        generate.run_script(args)
     except SystemExit as e:
         custom_model_restore()
         assert e.code == 1

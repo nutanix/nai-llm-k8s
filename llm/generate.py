@@ -250,7 +250,7 @@ def read_config_for_download(gen_model: GenerateDataModel) -> None:
                 "If you want to create a model archive file for a custom model, there "
                 "are two methods:\n"
                 "1. If you have already downloaded the custom model files, please include"
-                " the --no_download flag and provide the model_path directory which contains "
+                " the --skip_download flag and provide the model_path directory which contains "
                 "the model files.\n"
                 "2. If you need to download the model files, provide the HuggingFace "
                 "repository ID along with a model_path driectory where the model "
@@ -377,7 +377,7 @@ if __name__ == "__main__":
         help="HuggingFace repository ID (In case of custom model download)",
     )
     parser.add_argument(
-        "--no_download", action="store_false", help="flag to not download"
+        "--skip_download", action="store_false", help="flag to not download"
     )
     parser.add_argument(
         "--model_path",
