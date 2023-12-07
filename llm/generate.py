@@ -242,19 +242,15 @@ def read_config_for_download(gen_model: GenerateDataModel) -> None:
                 )
         else:
             print(
-                "## If you want to create a model archive file with the supported models, "
+                "## If you want to create a model archive file for supported models, "
                 "make sure you're model name is present in the below : "
             )
             print(list(models.keys()))
             print(
-                "If you want to create a model archive file for a custom model, there "
-                "are two methods:\n"
-                "1. If you have already downloaded the custom model files, please include"
-                " the --skip_download flag and provide the model_path directory which contains "
-                "the model files.\n"
-                "2. If you need to download the model files, provide the HuggingFace "
-                "repository ID along with a model_path driectory where the model "
-                "files are to be downloaded."
+                "\nIf you want to create a model archive file for"
+                " either a Custom Model or other HuggingFace models, "
+                "refer to the official GPT-in-a-Box documentation: "
+                "https://opendocs.nutanix.com/gpt-in-a-box/overview/"
             )
             sys.exit(1)
 
