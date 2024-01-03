@@ -10,7 +10,6 @@ import time
 from typing import List, Dict
 import tqdm
 import utils.tsutils as ts
-import utils.hf_utils as hf
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 from kubernetes import client, config
 from kserve import (
@@ -50,32 +49,33 @@ def get_inputs_from_folder(input_path: str) -> List:
     )
 
 
-def check_if_valid_version(model_info: Dict, mount_path: str) -> str:
+def update_repo_version(model_info: Dict, mount_path: str) -> str:
     """
-    Check if the model files for a specific commit ID exist in the given directory.
+    Check if the model files for a specific commit ID exist in the given directory and
+    updates the repo_version to it's complete form.
 
     Args:
       model_info(dict): A dictionary containing the following:
         model_name (str): The name of the model.
         repo_version (str): The commit ID of HuggingFace repo of the model.
         repo_id (str): The repo id.
-        hf_token (str): Your HuggingFace token (Required only for LLAMA2 model).
       mount_path (str): The local file server mount path where the model files are expected.
     Raises:
         sys.exit(1): If the model files do not exist, the
                      function will terminate the program with an exit code of 1.
     """
-    hf.hf_token_check(model_info["repo_id"], model_info["hf_token"])
-    model_info["repo_version"] = hf.get_repo_commit_id(
-        repo_id=model_info["repo_id"],
-        revision=model_info["repo_version"],
-        token=model_info["hf_token"],
-    )
+    model_path = os.path.join(mount_path, model_info["model_name"])
+
+    # Compare the directory name with given repo_version
+    for full_repo_version in os.listdir(model_path):
+        if full_repo_version.startswith(model_info["repo_version"]) and os.path.isdir(
+            os.path.join(model_path, full_repo_version)
+        ):
+            model_info["repo_version"] = full_repo_version
+            break
     print(model_info)
-    model_spec_path = os.path.join(
-        mount_path, model_info["model_name"], model_info["repo_version"]
-    )
-    if not os.path.exists(model_spec_path):
+
+    if not os.path.exists(os.path.join(model_path, model_info["repo_version"])):
         print(
             f"## ERROR: The {model_info['model_name']} model files for given commit ID "
             "are not downloaded"
@@ -359,7 +359,6 @@ def execute(params: argparse.Namespace) -> None:
     model_info = {}
     model_info["model_name"] = params.model_name
     model_info["repo_version"] = params.repo_version
-    model_info["hf_token"] = params.hf_token
 
     input_path = params.data
     mount_path = params.mount_path
@@ -380,7 +379,7 @@ def execute(params: argparse.Namespace) -> None:
         if not model_info["repo_version"]:
             model_info["repo_version"] = model_params["repo_version"]
         model_info["repo_id"] = model_params["repo_id"]
-        model_info["repo_version"] = check_if_valid_version(model_info, mount_path)
+        model_info["repo_version"] = update_repo_version(model_info, mount_path)
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
@@ -427,12 +426,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--mount_path", type=str, help="local path to the nfs mount location"
-    )
-    parser.add_argument(
-        "--hf_token",
-        type=str,
-        default=None,
-        help="HuggingFace Hub token to download LLAMA(2) models",
     )
     # Parse the command-line arguments
     args = parser.parse_args()

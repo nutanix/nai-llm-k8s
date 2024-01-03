@@ -8,7 +8,7 @@ MODEL_TIMEOUT_IN_SEC="1500"
 
 function helpFunction()
 {
-    echo "Usage: $0 -n <MODEL_NAME>  -g <NUM_OF_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -d <INPUT_DATA_ABSOLUTE_PATH> -v <REPO_COMMIT_ID> -t <Your_HuggingFace_Hub_Token>]"
+    echo "Usage: $0 -n <MODEL_NAME>  -g <NUM_OF_GPUS> -f <NFS_ADDRESS_WITH_SHARE_PATH> -m <NFS_LOCAL_MOUNT_LOCATION> -e <KUBE_DEPLOYMENT_NAME> [OPTIONAL -d <INPUT_DATA_ABSOLUTE_PATH> -v <REPO_COMMIT_ID>]"
     echo -e "\t-f NFS server address with share path information"
     echo -e "\t-m Absolute path to the NFS local mount location"
     echo -e "\t-e Name of the deployment metadata"
@@ -17,7 +17,6 @@ function helpFunction()
     echo -e "\t-d Absolute path to the inputs folder that contains data to be predicted."
     echo -e "\t-g Number of gpus to be used to execute. Set 0 to use cpu"
     echo -e "\t-v Commit id of the HuggingFace Repo."
-    echo -e "\t-t Your HuggingFace token (Required only for LLAMA2 model)."
     exit 1 # Exit script after printing help
 }
 
@@ -63,16 +62,12 @@ function inference_exec_kubernetes()
         exec_cmd+=" --repo_version $repo_version"
     fi
 
-    if [ ! -z $hf_token ] ; then
-        exec_cmd+=" --hf_token $hf_token"
-    fi
-
     echo "Running the Inference script";
     $exec_cmd
 }
 
 # Entry Point
-while getopts ":n:v:m:t:d:g:f:e:" opt;
+while getopts ":n:v:m:d:g:f:e:" opt;
 do
    case "$opt" in
         n ) model_name="$OPTARG" ;;
@@ -82,7 +77,6 @@ do
         e ) deploy_name="$OPTARG" ;;
         v ) repo_version="$OPTARG" ;;
         m ) mount_path="$OPTARG" ;;
-        t ) hf_token="$OPTARG" ;;
         ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
    esac
 done
