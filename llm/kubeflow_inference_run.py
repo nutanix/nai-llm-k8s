@@ -368,7 +368,6 @@ def execute(params: argparse.Namespace) -> None:
     input_path = params.data
     mount_path = params.mount_path
     model_timeout = params.model_timeout
-
     quantize_bits = params.quantize_bits
 
     check_if_path_exists(mount_path, "local nfs mount", is_dir=True)
@@ -390,6 +389,9 @@ def execute(params: argparse.Namespace) -> None:
 
     if quantize_bits not in [4, 8, 16]:
         print("## Quantization precision bits should be either 4, 8 or 16")
+        sys.exit(1)
+    elif quantize_bits in [4, 8] and not deployment_resources["gpus"]:
+        print("## BitsAndBytes Quantization requires GPUs")
         sys.exit(1)
     else:
         model_params["quantize_bits"] = quantize_bits
