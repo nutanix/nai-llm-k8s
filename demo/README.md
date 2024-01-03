@@ -8,7 +8,7 @@ This is a real time chatbot demo which talks to the deployed model endpoint over
 
 ## Deploy models
 
-Download and deploy the following models as per instructions provided in the [docs](https://opendocs.nutanix.com/gpt-in-a-box/overview/). 
+Download and deploy the following models on K8s cluster as per instructions provided in the [docs](https://opendocs.nutanix.com/gpt-in-a-box/overview/). 
 
     lama2-7b-chat
     
