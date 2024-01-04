@@ -18,7 +18,7 @@ function helpFunction()
     echo -e "\t-g Number of gpus to be used to execute. Set 0 to use cpu"
     echo -e "\t-v Commit id of the HuggingFace Repo."
     echo -e "\t-t Your HuggingFace token (Required only for LLAMA2 model)."
-    echo -e "\t-q BitsAndBytes Quantization Precision (4, 8 or 16)"
+    echo -e "\t-q BitsAndBytes Quantization Precision (4 or 8)"
     exit 1 # Exit script after printing help
 }
 

@@ -387,10 +387,10 @@ def execute(params: argparse.Namespace) -> None:
         model_info["repo_id"] = model_params["repo_id"]
         model_info["repo_version"] = check_if_valid_version(model_info, mount_path)
 
-    if quantize_bits not in [4, 8, 16]:
-        print("## Quantization precision bits should be either 4, 8 or 16")
+    if quantize_bits and int(quantize_bits) not in [4, 8]:
+        print("## Quantization precision bits should be either 4 or 8")
         sys.exit(1)
-    elif quantize_bits in [4, 8] and not deployment_resources["gpus"]:
+    elif quantize_bits and deployment_resources["gpus"]:
         print("## BitsAndBytes Quantization requires GPUs")
         sys.exit(1)
     else:
@@ -450,9 +450,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--quantize_bits",
-        type=int,
-        default=16,
-        help="BitsAndBytes Quantization Precision (4, 8 or 16)",
+        type=str,
+        default="",
+        help="BitsAndBytes Quantization Precision (4 or 8)",
     )
     # Parse the command-line arguments
     args = parser.parse_args()
