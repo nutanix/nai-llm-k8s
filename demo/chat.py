@@ -154,27 +154,33 @@ def generate_response(input_text):
     - str: The generated response.
 
     """
-    kubectl_command = (
-        "kubectl get po -l istio=ingressgateway "
-        "-n istio-system -o jsonpath='{.items[0].status.hostIP}'"
-    )
-    host_ip = subprocess.check_output(kubectl_command, shell=True, text=True).strip()
+    try:
+        kubectl_command = (
+            "kubectl get po -l istio=ingressgateway "
+            "-n istio-system -o jsonpath='{.items[0].status.hostIP}'"
+        )
+        host_ip = subprocess.check_output(
+            kubectl_command, shell=True, text=True
+        ).strip()
 
-    kubectl_command = (
-        "kubectl -n istio-system get service istio-ingressgateway "
-        "-o jsonpath='{.spec.ports[?(@.name==\"http2\")].nodePort}'"
-    )
-    ingress_port = subprocess.check_output(
-        kubectl_command, shell=True, text=True
-    ).strip()
+        kubectl_command = (
+            "kubectl -n istio-system get service istio-ingressgateway "
+            "-o jsonpath='{.spec.ports[?(@.name==\"http2\")].nodePort}'"
+        )
+        ingress_port = subprocess.check_output(
+            kubectl_command, shell=True, text=True
+        ).strip()
 
-    kubectl_command = (
-        "kubectl get inferenceservice llm-deploy -o jsonpath='{.status.url}'"
-    )
-    service_url = subprocess.check_output(
-        kubectl_command, shell=True, text=True
-    ).strip()
-    service_hostname = service_url.split("/")[2]
+        kubectl_command = (
+            "kubectl get inferenceservice llm-deploy -o jsonpath='{.status.url}'"
+        )
+        service_url = subprocess.check_output(
+            kubectl_command, shell=True, text=True
+        ).strip()
+        service_hostname = service_url.split("/")[2]
+    except subprocess.CalledProcessError:
+        print("Inference backend is unavailable.")
+        return ""
 
     input_prompt = get_json_format_prompt(input_text)
     url = f"http://{host_ip}:" f"{ingress_port}/v2/models/{LLM}/infer"
