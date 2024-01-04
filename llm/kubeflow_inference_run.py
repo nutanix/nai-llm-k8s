@@ -388,7 +388,8 @@ def execute(params: argparse.Namespace) -> None:
         model_info["repo_version"] = check_if_valid_version(model_info, mount_path)
 
     if quantize_bits and int(quantize_bits) not in [4, 8]:
-        print("## Quantization precision bits should be either 4 or 8")
+        print("## Quantization precision bits should be either 4 or 8."
+              " Default precision used is 16 (bfloat16)")
         sys.exit(1)
     elif quantize_bits and deployment_resources["gpus"]:
         print("## BitsAndBytes Quantization requires GPUs")
