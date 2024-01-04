@@ -148,6 +148,8 @@ def generate_mars(
             mar_size_thread.join()
             print(f"## {gen_model.model_name}.mar is generated.\n")
         except subprocess.CalledProcessError as exc:
+            stop_monitoring.set()
+            mar_size_thread.join()
             print("## Creation failed !\n")
             if debug:
                 print(f"## {gen_model.model_name} creation failed !, error: {exc}\n")
