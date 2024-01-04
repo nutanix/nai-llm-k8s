@@ -16,9 +16,9 @@ Download and deploy the following models on K8s cluster as per instructions prov
 
 ## Run Chatbot app
 >**NOTE:**   
-> When running the Chatbot from a machine separate from the one hosting the Language Model (LLM), it is required to:
+> Before deploying the Chatbot app, ensure that you have the necessary prerequisites. This includes having **kubectl** installed and a valid **KubeConfig** file for the Kubernetes (K8s) cluster where the Language Model (LLM) is deployed. If prerequisites are not present, follow the steps below:
 >* Install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl).
->* Download the KubeConfig of the same K8s cluster as the machine where LLM is deployed. Download and set up KubeConfig by following the steps outlined in [Downloading the Kubeconfig](https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Kubernetes-Engine-v2_5:top-download-kubeconfig-t.html) on the Nutanix Support Portal.  
+>* Download and set up KubeConfig by following the steps outlined in [Downloading the Kubeconfig](https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Kubernetes-Engine-v2_5:top-download-kubeconfig-t.html) on the Nutanix Support Portal.  
 
 Once the inference server is up, run
 
