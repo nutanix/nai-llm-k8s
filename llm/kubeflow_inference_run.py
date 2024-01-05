@@ -49,10 +49,11 @@ def get_inputs_from_folder(input_path: str) -> List:
     )
 
 
-def update_repo_version(model_info: Dict, mount_path: str) -> str:
+def check_model_paths(
+    model_info: Dict, mount_path: str, is_custom: bool = False
+) -> None:
     """
-    Check if the model files for a specific commit ID exist in the given directory and
-    updates the repo_version to it's complete form.
+    Checks if the MAR file and config.properties file exists for a given model and repository
 
     Args:
       model_info(dict): A dictionary containing the following:
@@ -60,11 +61,46 @@ def update_repo_version(model_info: Dict, mount_path: str) -> str:
         repo_version (str): The commit ID of HuggingFace repo of the model.
         repo_id (str): The repo id.
       mount_path (str): The local file server mount path where the model files are expected.
+      is_custom (bool): Flag signifying whether the model is a custom model or not.
+    """
+    model_path = os.path.join(mount_path, model_info["model_name"])
+    if not is_custom:
+        model_path = os.path.join(model_path, model_info["repo_version"])
+
+    check_if_path_exists(
+        os.path.join(model_path, "model-store", f"{model_info['model_name']}.mar"),
+        "Model Archive file",
+        is_dir=False,
+    )
+    check_if_path_exists(
+        os.path.join(model_path, "config", "config.properties"),
+        "Config file",
+        is_dir=False,
+    )
+
+
+def set_repo_version(
+    model_info: Dict, mount_path: str, config_repo_version: str
+) -> None:
+    """
+    Check if the model files for a specific commit ID exist in the given directory and
+    sets the repo_version to it's complete form.
+
+    Args:
+      model_info(dict): A dictionary containing the following:
+        model_name (str): The name of the model.
+        repo_version (str): The commit ID of HuggingFace repo of the model.
+        repo_id (str): The repo id.
+      mount_path (str): The local file server mount path where the model files are expected.
+      config_repo_version (str): The commit ID of the HuggingFace repo in model_config.json
     Raises:
         sys.exit(1): If the model files do not exist, the
                      function will terminate the program with an exit code of 1.
     """
     model_path = os.path.join(mount_path, model_info["model_name"])
+
+    if not model_info["repo_version"]:
+        model_info["repo_version"] = config_repo_version
 
     # Compare the directory name with given repo_version
     for full_repo_version in os.listdir(model_path):
@@ -81,7 +117,6 @@ def update_repo_version(model_info: Dict, mount_path: str) -> str:
             "are not downloaded"
         )
         sys.exit(1)
-    return model_info["repo_version"]
 
 
 def create_pv(
@@ -387,33 +422,10 @@ def execute(params: argparse.Namespace) -> None:
     )
 
     if not model_params["is_custom"]:
-        if not model_info["repo_version"]:
-            model_info["repo_version"] = model_params["repo_version"]
         model_info["repo_id"] = model_params["repo_id"]
-        model_info["repo_version"] = update_repo_version(model_info, mount_path)
+        set_repo_version(model_info, mount_path, model_params["repo_version"])
 
-    check_if_path_exists(
-        os.path.join(
-            mount_path,
-            model_info["model_name"],
-            model_info["repo_version"],
-            "model-store",
-            f"{model_info['model_name']}.mar",
-        ),
-        "Model Archive file",
-        is_dir=False,
-    )
-    check_if_path_exists(
-        os.path.join(
-            mount_path,
-            model_info["model_name"],
-            model_info["repo_version"],
-            "config",
-            "config.properties",
-        ),
-        "Config file",
-        is_dir=False,
-    )
+    check_model_paths(model_info, mount_path, model_params["is_custom"])
 
     if quantize_bits and int(quantize_bits) not in [4, 8]:
         print(
