@@ -393,7 +393,7 @@ def execute(params: argparse.Namespace) -> None:
             " Default precision used is 16 (bfloat16)"
         )
         sys.exit(1)
-    elif quantize_bits and deployment_resources["gpus"]:
+    elif quantize_bits and not deployment_resources["gpus"]:
         print("## BitsAndBytes Quantization requires GPUs")
         sys.exit(1)
     else:
