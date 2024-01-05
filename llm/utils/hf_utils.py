@@ -110,7 +110,8 @@ def hf_token_check(repo_id: str, token: str) -> None:
         print(
             (
                 "HuggingFace Hub token is required for llama download. "
-                "Please specify it using --hf_token=<your token>. Refer "
+                "Please specify it using --hf_token=<your token> argument "
+                "or set it as an environment variable 'HF_TOKEN'. Refer "
                 "https://huggingface.co/docs/hub/security-tokens"
             )
         )
