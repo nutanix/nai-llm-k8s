@@ -188,6 +188,10 @@ def create_isvc(
                     client.V1EnvVar(
                         name="NAI_MAX_TOKENS", value=str(model_params["max_new_tokens"])
                     ),
+                    client.V1EnvVar(
+                        name="NAI_QUANTIZATION",
+                        value=str(model_params["quantize_bits"]),
+                    ),
                 ],
                 resources=client.V1ResourceRequirements(
                     limits={
@@ -363,6 +367,7 @@ def execute(params: argparse.Namespace) -> None:
     input_path = params.data
     mount_path = params.mount_path
     model_timeout = params.model_timeout
+    quantize_bits = params.quantize_bits
 
     check_if_path_exists(mount_path, "local nfs mount", is_dir=True)
     if not nfs_path or not nfs_server:
@@ -375,11 +380,52 @@ def execute(params: argparse.Namespace) -> None:
 
     model_params = ts.get_model_params(model_info["model_name"])
 
+    check_if_path_exists(
+        os.path.join(mount_path, model_info["model_name"]),
+        "model directory",
+        is_dir=True,
+    )
+
     if not model_params["is_custom"]:
         if not model_info["repo_version"]:
             model_info["repo_version"] = model_params["repo_version"]
         model_info["repo_id"] = model_params["repo_id"]
         model_info["repo_version"] = update_repo_version(model_info, mount_path)
+
+    check_if_path_exists(
+        os.path.join(
+            mount_path,
+            model_info["model_name"],
+            model_info["repo_version"],
+            "model-store",
+            f"{model_info['model_name']}.mar",
+        ),
+        "Model Archive file",
+        is_dir=False,
+    )
+    check_if_path_exists(
+        os.path.join(
+            mount_path,
+            model_info["model_name"],
+            model_info["repo_version"],
+            "config",
+            "config.properties",
+        ),
+        "Config file",
+        is_dir=False,
+    )
+
+    if quantize_bits and int(quantize_bits) not in [4, 8]:
+        print(
+            "## Quantization precision bits should be either 4 or 8."
+            " Default precision used is 16 (bfloat16)"
+        )
+        sys.exit(1)
+    elif quantize_bits and not deployment_resources["gpus"]:
+        print("## BitsAndBytes Quantization requires GPUs")
+        sys.exit(1)
+    else:
+        model_params["quantize_bits"] = quantize_bits
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
@@ -426,6 +472,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--mount_path", type=str, help="local path to the nfs mount location"
+    )
+    parser.add_argument(
+        "--quantize_bits",
+        type=str,
+        default="",
+        help="BitsAndBytes Quantization Precision (4 or 8)",
     )
     # Parse the command-line arguments
     args = parser.parse_args()
