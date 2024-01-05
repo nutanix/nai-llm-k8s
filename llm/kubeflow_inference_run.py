@@ -188,6 +188,10 @@ def create_isvc(
                     client.V1EnvVar(
                         name="NAI_MAX_TOKENS", value=str(model_params["max_new_tokens"])
                     ),
+                    client.V1EnvVar(
+                        name="NAI_QUANTIZATION",
+                        value=str(model_params["quantize_bits"]),
+                    ),
                 ],
                 resources=client.V1ResourceRequirements(
                     limits={
@@ -364,6 +368,7 @@ def execute(params: argparse.Namespace) -> None:
     input_path = params.data
     mount_path = params.mount_path
     model_timeout = params.model_timeout
+    quantize_bits = params.quantize_bits
 
     check_if_path_exists(mount_path, "local nfs mount", is_dir=True)
     if not nfs_path or not nfs_server:
@@ -381,6 +386,18 @@ def execute(params: argparse.Namespace) -> None:
             model_info["repo_version"] = model_params["repo_version"]
         model_info["repo_id"] = model_params["repo_id"]
         model_info["repo_version"] = check_if_valid_version(model_info, mount_path)
+
+    if quantize_bits and int(quantize_bits) not in [4, 8]:
+        print(
+            "## Quantization precision bits should be either 4 or 8."
+            " Default precision used is 16 (bfloat16)"
+        )
+        sys.exit(1)
+    elif quantize_bits and not deployment_resources["gpus"]:
+        print("## BitsAndBytes Quantization requires GPUs")
+        sys.exit(1)
+    else:
+        model_params["quantize_bits"] = quantize_bits
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
@@ -433,6 +450,12 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="HuggingFace Hub token to download LLAMA(2) models",
+    )
+    parser.add_argument(
+        "--quantize_bits",
+        type=str,
+        default="",
+        help="BitsAndBytes Quantization Precision (4 or 8)",
     )
     # Parse the command-line arguments
     args = parser.parse_args()

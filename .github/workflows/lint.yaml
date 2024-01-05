@@ -25,7 +25,7 @@ jobs:
           python-version: 3.11
 
       - name: Install Python dependencies
-        run: pip install --no-cache-dir pytest black pylint torchserve==0.8.2 torch==2.0.1 transformers==4.33.0 -r llm/requirements.txt -r demo/requirements.txt
+        run: pip install --no-cache-dir pytest black pylint torchserve==0.8.2 torch==2.0.1 transformers==4.36.0 -r llm/requirements.txt -r demo/requirements.txt
         
       - name: Run pylint
         run: |
