@@ -347,6 +347,12 @@ def run_script(params: argparse.Namespace) -> bool:
     check_if_path_exists(gen_model.output, "output", is_dir=True)
     gen_model.set_model_files_and_mar(params)
 
+    if gen_model.is_custom and not gen_model.mar_utils.model_path:
+        print(
+            "## Error: For HuggingFace models and Custom models model path should be set"
+        )
+        sys.exit(1)
+
     if gen_model.download_model:
         gen_model = run_download(gen_model)
 

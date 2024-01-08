@@ -104,7 +104,7 @@ class GenerateDataModel:
 
         self.repo_info.repo_id = params.repo_id
         self.repo_info.repo_version = params.repo_version
-        self.repo_info.hf_token = params.hf_token
+        self.repo_info.hf_token = params.hf_token or os.environ.get("HF_TOKEN")
 
         self.debug = params.debug
 
