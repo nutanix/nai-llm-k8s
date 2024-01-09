@@ -10,7 +10,6 @@ import time
 from typing import List, Dict
 import tqdm
 import utils.tsutils as ts
-import utils.hf_utils as hf
 from utils.system_utils import check_if_path_exists, get_all_files_in_directory
 from kubernetes import client, config
 from kserve import (
@@ -50,38 +49,74 @@ def get_inputs_from_folder(input_path: str) -> List:
     )
 
 
-def check_if_valid_version(model_info: Dict, mount_path: str) -> str:
+def check_model_paths(
+    model_info: Dict, mount_path: str, is_custom: bool = False
+) -> None:
     """
-    Check if the model files for a specific commit ID exist in the given directory.
+    Checks if the MAR file and config.properties file exists for a given model and repository
 
     Args:
       model_info(dict): A dictionary containing the following:
         model_name (str): The name of the model.
         repo_version (str): The commit ID of HuggingFace repo of the model.
         repo_id (str): The repo id.
-        hf_token (str): Your HuggingFace token (Required only for LLAMA2 model).
       mount_path (str): The local file server mount path where the model files are expected.
+      is_custom (bool): Flag signifying whether the model is a custom model or not.
+    """
+    model_path = os.path.join(mount_path, model_info["model_name"])
+    if not is_custom:
+        model_path = os.path.join(model_path, model_info["repo_version"])
+
+    check_if_path_exists(
+        os.path.join(model_path, "model-store", f"{model_info['model_name']}.mar"),
+        "Model Archive file",
+        is_dir=False,
+    )
+    check_if_path_exists(
+        os.path.join(model_path, "config", "config.properties"),
+        "Config file",
+        is_dir=False,
+    )
+
+
+def set_repo_version(
+    model_info: Dict, mount_path: str, config_repo_version: str
+) -> None:
+    """
+    Check if the model files for a specific commit ID exist in the given directory and
+    sets the repo_version to it's complete form.
+
+    Args:
+      model_info(dict): A dictionary containing the following:
+        model_name (str): The name of the model.
+        repo_version (str): The commit ID of HuggingFace repo of the model.
+        repo_id (str): The repo id.
+      mount_path (str): The local file server mount path where the model files are expected.
+      config_repo_version (str): The commit ID of the HuggingFace repo in model_config.json
     Raises:
         sys.exit(1): If the model files do not exist, the
                      function will terminate the program with an exit code of 1.
     """
-    hf.hf_token_check(model_info["repo_id"], model_info["hf_token"])
-    model_info["repo_version"] = hf.get_repo_commit_id(
-        repo_id=model_info["repo_id"],
-        revision=model_info["repo_version"],
-        token=model_info["hf_token"],
-    )
+    model_path = os.path.join(mount_path, model_info["model_name"])
+
+    if not model_info["repo_version"]:
+        model_info["repo_version"] = config_repo_version
+
+    # Compare the directory name with given repo_version
+    for full_repo_version in os.listdir(model_path):
+        if full_repo_version.startswith(model_info["repo_version"]) and os.path.isdir(
+            os.path.join(model_path, full_repo_version)
+        ):
+            model_info["repo_version"] = full_repo_version
+            break
     print(model_info)
-    model_spec_path = os.path.join(
-        mount_path, model_info["model_name"], model_info["repo_version"]
-    )
-    if not os.path.exists(model_spec_path):
+
+    if not os.path.exists(os.path.join(model_path, model_info["repo_version"])):
         print(
             f"## ERROR: The {model_info['model_name']} model files for given commit ID "
             "are not downloaded"
         )
         sys.exit(1)
-    return model_info["repo_version"]
 
 
 def create_pv(
@@ -187,6 +222,10 @@ def create_isvc(
                     client.V1EnvVar(name="NAI_TOP_P", value=str(model_params["top_p"])),
                     client.V1EnvVar(
                         name="NAI_MAX_TOKENS", value=str(model_params["max_new_tokens"])
+                    ),
+                    client.V1EnvVar(
+                        name="NAI_QUANTIZATION",
+                        value=str(model_params["quantize_bits"]),
                     ),
                 ],
                 resources=client.V1ResourceRequirements(
@@ -359,11 +398,11 @@ def execute(params: argparse.Namespace) -> None:
     model_info = {}
     model_info["model_name"] = params.model_name
     model_info["repo_version"] = params.repo_version
-    model_info["hf_token"] = params.hf_token
 
     input_path = params.data
     mount_path = params.mount_path
     model_timeout = params.model_timeout
+    quantize_bits = params.quantize_bits
 
     check_if_path_exists(mount_path, "local nfs mount", is_dir=True)
     if not nfs_path or not nfs_server:
@@ -376,11 +415,29 @@ def execute(params: argparse.Namespace) -> None:
 
     model_params = ts.get_model_params(model_info["model_name"])
 
+    check_if_path_exists(
+        os.path.join(mount_path, model_info["model_name"]),
+        "model directory",
+        is_dir=True,
+    )
+
     if not model_params["is_custom"]:
-        if not model_info["repo_version"]:
-            model_info["repo_version"] = model_params["repo_version"]
         model_info["repo_id"] = model_params["repo_id"]
-        model_info["repo_version"] = check_if_valid_version(model_info, mount_path)
+        set_repo_version(model_info, mount_path, model_params["repo_version"])
+
+    check_model_paths(model_info, mount_path, model_params["is_custom"])
+
+    if quantize_bits and int(quantize_bits) not in [4, 8]:
+        print(
+            "## Quantization precision bits should be either 4 or 8."
+            " Default precision used is 16 (bfloat16)"
+        )
+        sys.exit(1)
+    elif quantize_bits and not deployment_resources["gpus"]:
+        print("## BitsAndBytes Quantization requires GPUs")
+        sys.exit(1)
+    else:
+        model_params["quantize_bits"] = quantize_bits
 
     config.load_kube_config()
     core_api = client.CoreV1Api()
@@ -429,10 +486,10 @@ if __name__ == "__main__":
         "--mount_path", type=str, help="local path to the nfs mount location"
     )
     parser.add_argument(
-        "--hf_token",
+        "--quantize_bits",
         type=str,
-        default=None,
-        help="HuggingFace Hub token to download LLAMA(2) models",
+        default="",
+        help="BitsAndBytes Quantization Precision (4 or 8)",
     )
     # Parse the command-line arguments
     args = parser.parse_args()
