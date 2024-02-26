@@ -3,6 +3,7 @@ This module stores the dataclasses GenerateDataModel, MarUtils, RepoInfo,
 function set_values that sets the GenerateDataModel attributes and
 function set_model_files_and_mar that sets model path and mar output values.
 """
+
 import os
 import dataclasses
 import argparse
