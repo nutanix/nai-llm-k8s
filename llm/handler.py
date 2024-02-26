@@ -73,11 +73,6 @@ class LLMHandler(BaseHandler, ABC):
     def __init__(self):
         super().__init__()
         self.initialized = False
-        self.request = {
-            "request_list": defaultdict(int),
-            "request_ids": defaultdict(int),
-            "request_type": defaultdict(int),
-        }
         self.tokenizer = None
         self.map_location = None
         self.device = None
@@ -155,6 +150,11 @@ class LLMHandler(BaseHandler, ABC):
             Tensor: Tokenized input data
         """
         input_list = []
+        self.request = {
+            "request_list": defaultdict(int),
+            "request_ids": defaultdict(int),
+            "request_type": defaultdict(int),
+        }
 
         for idx, input_data in enumerate(data):
             # Pre-process for Kserve v2 format
