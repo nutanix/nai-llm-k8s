@@ -1,6 +1,7 @@
 """
 Utility functions for running inference and getiing model parameters
 """
+
 import os
 import json
 import collections

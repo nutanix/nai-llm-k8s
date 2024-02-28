@@ -1,6 +1,7 @@
 """
 Clean up Kubernetes resources associated with a deployment.
 """
+
 import argparse
 import sys
 import requests

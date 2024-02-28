@@ -2,6 +2,7 @@
 Downloads model files, generates Model Archive (MAR) 
 and config.properties file
 """
+
 import os
 import argparse
 import json
