@@ -5,3 +5,4 @@ accelerate==0.22.0
 einops==0.6.1
 bitsandbytes==0.41.1
 scipy==1.11.4
+setuptools==69.5.1
