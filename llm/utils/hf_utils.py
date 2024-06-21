@@ -3,9 +3,10 @@ Utility functions for using HuggingFace Api
 """
 
 import sys
-from typing import List
+import os
 from huggingface_hub import HfApi
 from huggingface_hub.utils import (
+    GatedRepoError,
     RepositoryNotFoundError,
     RevisionNotFoundError,
     HfHubHTTPError,
@@ -14,20 +15,19 @@ from huggingface_hub.utils import (
 from utils.generate_data_model import GenerateDataModel
 
 
-def get_repo_files_list(gen_model: GenerateDataModel) -> List[str]:
+def get_repo_file_extensions(gen_model: GenerateDataModel) -> set:
     """
-    This function returns a list of all files in the HuggingFace repo of
+    This function returns set of all file extensions in the Hugging Face repo of
     the model.
     Args:
-        gen_model (GenerateDataModel): An instance of the GenerateDataModel
-                                      class with relevant information.
+        gen_model (GenerateDataModel): An instance of the GenerateDataModel class
     Returns:
-        repo_files (list): all files in the HuggingFace repo of
-                           the model
+        repo_file_extension (set): The set of all file extensions in the
+                                    Hugging Face repo of the model
     Raises:
         sys.exit(1): If repo_id, repo_version or huggingface token
-                     is not valid, the function will terminate
-                     the program with an exit code of 1.
+                    is not valid, the function will terminate
+                    the program with an exit code of 1.
     """
     try:
         hf_api = HfApi()
@@ -36,19 +36,19 @@ def get_repo_files_list(gen_model: GenerateDataModel) -> List[str]:
             revision=gen_model.repo_info.repo_version,
             token=gen_model.repo_info.hf_token,
         )
-        return repo_files
+        return {os.path.splitext(file_name)[1] for file_name in repo_files}
     except (
-        HfHubHTTPError,
-        HFValidationError,
+        GatedRepoError,
         RepositoryNotFoundError,
         RevisionNotFoundError,
+        HfHubHTTPError,
+        HFValidationError,
+        ValueError,
         KeyError,
     ):
         print(
-            (
-                "\n## Error: Please check either repo_id, repo_version "
-                "or huggingface token is not correct\n"
-            )
+            "## Error: Please check either repo_id, repo_version"
+            " or HuggingFace ID is not correct\n"
         )
         sys.exit(1)
 
